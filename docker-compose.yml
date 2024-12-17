@@ -1,0 +1,68 @@
+services:
+    postgres:
+        # https://hub.docker.com/_/postgres
+        image: "postgres:17.2"
+        environment:
+            - "POSTGRES_DB"
+            - "POSTGRES_USER"
+            - "POSTGRES_PASSWORD"
+        healthcheck:
+            test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB}"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+        volumes: [ "postgres:/var/lib/postgresql/data" ]
+    valkey:
+        # https://hub.docker.com/r/valkey/valkey
+        image: "valkey/valkey:8.0.1"
+        environment:
+            # persist every 60s if at least one write was done
+            VALKEY_EXTRA_FLAGS: "--save 60 1"
+        healthcheck:
+            test: ["CMD-SHELL", "valkey-cli ping | grep PONG"]
+            interval: 5s
+            timeout: 3s
+            retries: 3
+            start_period: 10s
+        volumes: [ "valkey:/data" ]
+    rabbitmq:
+        build:
+            context: "docker/rabbitmq"
+            additional_contexts:
+                # https://hub.docker.com/_/rabbitmq
+                # NOTE: probably don't use management variant on prod, or lock it proper
+                upstream_image: "docker-image://rabbitmq:4.0.4-management"
+        healthcheck:
+            test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+        # TODO: Configure persistence
+    discord_proxy:
+        build:
+            context: "docker/discord_proxy"
+            additional_contexts:
+                # https://github.com/twilight-rs/http-proxy/pkgs/container/http-proxy
+                # NOTE: ghcr.io/twilight-rs/http-proxy:metrics but pinned to hash
+                upstream_image: "docker-image://ghcr.io/twilight-rs/http-proxy@sha256:8404a2b528800233472f8c6a3d10eac7cc2da8364e9a2d86800fee1540f28a28"
+        healthcheck:
+            test: ["CMD", "curl", "--head", "http://localhost/metrics"]
+            interval: 10s
+            timeout: 5s
+            retries: 3
+            start_period: 5s
+        environment:
+            - "DISCORD_TOKEN"
+    # TODO
+    # load_balancer:
+    #     image: "..."
+    # TODO
+    # gateway:
+    #     build: "gateway"
+    # TODO
+
+volumes:
+    postgres:
+    valkey:
