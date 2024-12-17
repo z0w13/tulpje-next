@@ -1,4 +1,34 @@
 services:
+    gateway:
+        build:
+            context: "."
+            dockerfile: "docker/Dockerfile"
+        command: "/bin/tulpje-gateway"
+        init: true
+        environment:
+            - "RUST_LOG"
+            - "DISCORD_TOKEN"
+            - "RABBITMQ_ADDRESS"
+            - "DISCORD_PROXY"
+            - "REDIS_URL"
+        depends_on:
+            # - valkey
+            - discord_proxy
+    handler:
+        build:
+            context: "."
+            dockerfile: "docker/Dockerfile"
+        command: "/bin/tulpje-handler"
+        init: true
+        environment:
+            - "RUST_LOG"
+            - "RABBITMQ_ADDRESS"
+            - "DISCORD_PROXY"
+            - "REDIS_URL"
+        depends_on:
+            # - valkey
+            # - postgres
+            - discord_proxy
     postgres:
         # https://hub.docker.com/_/postgres
         image: "postgres:17.2"
@@ -27,19 +57,22 @@ services:
             start_period: 10s
         volumes: [ "valkey:/data" ]
     rabbitmq:
+        hostname: "rabbitmq"
         build:
             context: "docker/rabbitmq"
             additional_contexts:
                 # https://hub.docker.com/_/rabbitmq
                 # NOTE: probably don't use management variant on prod, or lock it proper
                 upstream_image: "docker-image://rabbitmq:4.0.4-management"
+        ports:
+            - "15672:15672/tcp" # Management UI (Dev Only)
         healthcheck:
             test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
             interval: 30s
             timeout: 10s
             retries: 3
             start_period: 30s
-        # TODO: Configure persistence
+            # TODO: Configure persistence
     discord_proxy:
         build:
             context: "docker/discord_proxy"
@@ -58,10 +91,6 @@ services:
     # TODO
     # load_balancer:
     #     image: "..."
-    # TODO
-    # gateway:
-    #     build: "gateway"
-    # TODO
 
 volumes:
     postgres:
