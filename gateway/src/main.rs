@@ -74,6 +74,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "cache")]
     let cache = redlight::RedisCache::<cache::Config>::new(&config.redis_url).await?;
 
+    // initialisation done, ratelimit on session_limit
+    tracing::info!("waiting for gateway queue...");
+    reqwest::get(config.discord_gateway_queue).await?;
 
     // start main loop
     tracing::info!("starting main loop...");

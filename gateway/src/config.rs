@@ -5,6 +5,7 @@ use serde_envfile::Error;
 pub struct Config {
     pub discord_token: String,
     pub discord_proxy: String,
+    pub discord_gateway_queue: String,
     pub rabbitmq_address: String,
     pub redis_url: String,
 }

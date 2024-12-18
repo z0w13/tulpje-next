@@ -22,6 +22,7 @@ uuid = { version = "1.11.0", features = ["v7", "serde"] }
 serde-envfile = "0.1.0"
 serde = { version = "1.0.216", features = ["derive"] }
 dotenvy = "0.15.7"
+reqwest = "0.12.9"
 
 [build-dependencies]
 vergen-gitcl = { version = "1.0.1", features = ["build"] }

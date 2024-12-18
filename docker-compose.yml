@@ -8,12 +8,14 @@ services:
         environment:
             - "RUST_LOG"
             - "DISCORD_TOKEN"
+            - "DISCORD_GATEWAY_QUEUE"
             - "RABBITMQ_ADDRESS"
             - "DISCORD_PROXY"
             - "REDIS_URL"
         depends_on:
             # - valkey
             - discord_proxy
+            - gateway_queue
     handler:
         build:
             context: "."
@@ -73,6 +75,11 @@ services:
             retries: 3
             start_period: 30s
             # TODO: Configure persistence
+    gateway_queue:
+        image: "ghcr.io/twilight-rs/gateway-queue@sha256:b6614d239663e3bcc10d9a72bd42d68a41f693d738a55605324b590f0f798417"
+        # NOTE: Unfortunately can't health check, only endpoint is the queue for rate limiting
+        environment:
+            - "DISCORD_TOKEN"
     discord_proxy:
         build:
             context: "docker/discord_proxy"
