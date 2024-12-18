@@ -3,7 +3,7 @@ use std::error::Error;
 use twilight_model::gateway::{
     event::GatewayEventDeserializer,
     payload::outgoing::UpdatePresence,
-    presence::{Activity, ActivityEmoji, MinimalActivity, Status},
+    presence::{Activity, MinimalActivity, Status},
     OpCode,
 };
 
