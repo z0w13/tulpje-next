@@ -11,29 +11,43 @@ use tulpje_shared::DiscordEvent;
 
 #[cfg(feature = "cache")]
 mod cache;
+mod config;
+
+use config::Config;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // load .env into environment vars, ignore if not found
+    match dotenvy::dotenv().map(|_| ()) {
+        Err(err) if err.not_found() => {
+            tracing::warn!("no .env file found");
+            ()
+        }
+        result => result?,
+    };
+
+    // create config from environment vars
+    let config = Config::from_env()?;
+
     // set-up logging
     tracing_subscriber::fmt::init();
 
-    let token = std::env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN not set");
-
     // needed for fetching recommended shard count
-    let proxy_address = std::env::var("DISCORD_PROXY").expect("DISCORD_PROXY not set");
     let client = twilight_http::Client::builder()
-        .proxy(proxy_address.clone(), true)
+        .proxy(config.discord_proxy, true)
         .ratelimiter(None)
         .build();
 
-    let config = twilight_gateway::Config::builder(token, twilight_gateway::Intents::all()).build();
-    let mut shard = twilight_gateway::Shard::with_config(twilight_gateway::ShardId::ONE, config);
+    let shard_config =
+        twilight_gateway::Config::builder(config.discord_token, twilight_gateway::Intents::all())
+            .build();
+    let mut shard =
+        twilight_gateway::Shard::with_config(twilight_gateway::ShardId::ONE, shard_config);
 
-    let rabbitmq_address = std::env::var("RABBITMQ_ADDRESS").expect("RABBITMQ_ADDRESS not set");
     let rabbitmq_options = lapin::ConnectionProperties::default()
         .with_executor(tokio_executor_trait::Tokio::current())
         .with_reactor(tokio_reactor_trait::Tokio);
-    let rabbitmq_conn = lapin::Connection::connect(&rabbitmq_address, rabbitmq_options)
+    let rabbitmq_conn = lapin::Connection::connect(&config.rabbitmq_address, rabbitmq_options)
         .await
         .expect("couldn't connec to RabbitMQ");
     let rabbitmq_chan = rabbitmq_conn
@@ -55,10 +69,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create the cache
     #[cfg(feature = "cache")]
-    let cache = redlight::RedisCache::<cache::Config>::new(
-        &std::env::var("REDIS_URL").expect("REDIS_URL not set"),
-    )
-    .await?;
+    let cache = redlight::RedisCache::<cache::Config>::new(&config.redis_url).await?;
 
     let init_done = std::sync::atomic::AtomicBool::new(false);
 
