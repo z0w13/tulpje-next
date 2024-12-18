@@ -32,18 +32,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // set-up logging
     tracing_subscriber::fmt::init();
 
-    // needed for fetching recommended shard count
+    // create discord api client
     let client = twilight_http::Client::builder()
         .proxy(config.discord_proxy, true)
         .ratelimiter(None)
         .build();
 
+    // create the shard
     let shard_config =
         twilight_gateway::Config::builder(config.discord_token, twilight_gateway::Intents::all())
             .build();
     let mut shard =
         twilight_gateway::Shard::with_config(twilight_gateway::ShardId::ONE, shard_config);
 
+    // create the rabbitmq connection
     let rabbitmq_options = lapin::ConnectionProperties::default()
         .with_executor(tokio_executor_trait::Tokio::current())
         .with_reactor(tokio_reactor_trait::Tokio);
@@ -54,6 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .create_channel()
         .await
         .expect("couldn't create RabbitMQ channel");
+
     // declare the queue
     rabbitmq_chan
         .queue_declare(
@@ -67,12 +70,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
         .expect("couldn't declare queue");
 
-    // Create the cache
+    // create the cache
     #[cfg(feature = "cache")]
     let cache = redlight::RedisCache::<cache::Config>::new(&config.redis_url).await?;
 
-    let init_done = std::sync::atomic::AtomicBool::new(false);
 
+    // start main loop
+    tracing::info!("starting main loop...");
+    let init_done = std::sync::atomic::AtomicBool::new(false);
     loop {
         match shard.next_message().await {
             Ok(twilight_gateway::Message::Close(frame)) => {
