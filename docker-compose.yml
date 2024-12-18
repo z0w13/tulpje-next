@@ -60,12 +60,7 @@ services:
         volumes: [ "valkey:/data" ]
     rabbitmq:
         hostname: "rabbitmq"
-        build:
-            context: "docker/rabbitmq"
-            additional_contexts:
-                # https://hub.docker.com/_/rabbitmq
-                # NOTE: probably don't use management variant on prod, or lock it proper
-                upstream_image: "docker-image://rabbitmq:4.0.4-management"
+        image: "rabbitmq:4.0.4-management"
         ports:
             - "15672:15672/tcp" # Management UI (Dev Only)
         healthcheck:
