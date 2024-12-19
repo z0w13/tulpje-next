@@ -59,10 +59,9 @@ services:
             start_period: 10s
         volumes: [ "valkey:/data" ]
     rabbitmq:
+        # hostname needs to match hostname we connect with
         hostname: "rabbitmq"
-        image: "rabbitmq:4.0.4-management"
-        ports:
-            - "15672:15672/tcp" # Management UI (Dev Only)
+        image: "rabbitmq:4.0.4"
         healthcheck:
             test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
             interval: 30s
