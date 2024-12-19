@@ -39,7 +39,7 @@ services:
             - "POSTGRES_USER"
             - "POSTGRES_PASSWORD"
         healthcheck:
-            test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB}"]
+            test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB}", "-U", "${POSTGRES_USER}"]
             interval: 30s
             timeout: 10s
             retries: 3
