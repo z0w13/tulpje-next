@@ -2,7 +2,7 @@ mod config;
 
 use futures::StreamExt;
 
-use tulpje_shared::DiscordEvent;
+use tulpje_shared::{DiscordEvent, DiscordEventMeta};
 
 use config::Config;
 
@@ -84,15 +84,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             break;
         };
 
-        let (uuid, event) = match parse_delivery(delivery) {
-            Ok((uuid, event)) => (uuid, event),
+        let (meta, event) = match parse_delivery(delivery) {
+            Ok((meta, event)) => (meta, event),
             Err(err) => {
                 tracing::error!(?err, "couldn't parse delivery");
                 continue;
             }
         };
 
-        tracing::debug!(event = ?event.kind(), ?uuid, "event received");
+        tracing::debug!(
+            event = ?event.kind(),
+            uuid = ?meta.uuid,
+            shard = meta.shard,
+            "event received",
+        );
 
         match event {
             twilight_gateway::Event::InteractionCreate(e) => {
@@ -139,13 +144,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn parse_delivery(
     delivery: Result<lapin::message::Delivery, lapin::Error>,
-) -> Result<(uuid::Uuid, twilight_model::gateway::event::Event), Box<dyn std::error::Error>> {
+) -> Result<(DiscordEventMeta, twilight_model::gateway::event::Event), Box<dyn std::error::Error>> {
     let message = delivery?;
 
     let discord_event = serde_json::from_str::<DiscordEvent>(&String::from_utf8(message.data)?)?;
 
     Ok((
-        discord_event.uuid,
+        discord_event.meta,
         twilight_gateway::Event::from(
             twilight_gateway::parse(
                 discord_event.payload,

@@ -122,7 +122,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
 
-                    let event = DiscordEvent::new(text);
+                    let event = DiscordEvent::new(shard.id().number(), text);
 
                     rabbitmq_chan
                         .basic_publish(
@@ -134,7 +134,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         )
                         .await?;
 
-                    tracing::debug!(uuid=?event.uuid, "event sent");
+                    tracing::debug!(
+                        uuid = ?event.meta.uuid,
+                        shard = event.meta.shard,
+                        "event sent"
+                    );
                 }
             }
             Err(err) => {
