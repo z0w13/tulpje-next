@@ -1,0 +1,7 @@
+FROM scratch
+
+COPY target/x86_64-unknown-linux-musl/release/secret-loader /bin/secret-loader
+COPY target/x86_64-unknown-linux-musl/release/tulpje-gateway /bin/tulpje-gateway
+
+ENTRYPOINT [ "/bin/secret-loader" ]
+CMD [ "/bin/tulpje-gateway" ]

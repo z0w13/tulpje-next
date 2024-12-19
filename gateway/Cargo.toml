@@ -10,8 +10,8 @@ serde_json = "1.0.133"
 tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-twilight-gateway = "0.15.4"
-twilight-http = "0.15.4"
+twilight-gateway = { version = "0.15.4", features = ["rustls-webpki-roots" ] }
+twilight-http = { version = "0.15.4", features = ["decompression", "rustls-webpki-roots"], default-features = false }
 twilight-model = "0.15.4"
 redlight = { git = "https://github.com/MaxOhn/redlight.git", rev = "cd0a65d", version = "0.1.0", features = ["bytecheck"], optional = true }
 twilight-util = { version = "0.15.4", features = ["builder"] }
@@ -22,7 +22,7 @@ uuid = { version = "1.11.0", features = ["v7", "serde"] }
 serde-envfile = "0.1.0"
 serde = { version = "1.0.216", features = ["derive"] }
 dotenvy = "0.15.7"
-reqwest = "0.12.9"
+reqwest = { version = "0.12.9", default-features = false, features = ["rustls-tls", "charset", "http2"] }
 bb8-redis = "0.18.0"
 bb8 = "0.9.0"
 

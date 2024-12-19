@@ -14,7 +14,7 @@ tokio-reactor-trait = "1.1.0"
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 twilight-gateway = "0.15.4"
-twilight-http = "0.15.4"
+twilight-http = { version = "0.15.4", features = ["decompression", "rustls-webpki-roots"], default-features = false }
 twilight-model = "0.15.4"
 twilight-util = { version = "0.15.4", features = ["builder"] }
 uuid = { version = "1.11.0", features = ["v7", "serde"] }
