@@ -1,6 +1,7 @@
 use std::error::Error;
 
 use twilight_model::gateway::{
+    event::Event,
     event::GatewayEventDeserializer,
     payload::outgoing::UpdatePresence,
     presence::{Activity, MinimalActivity, Status},
@@ -101,29 +102,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 };
 
-                tracing::debug!(?opcode, "event received");
+                tracing::debug!(?opcode, "opcode received");
+
+                if let Ok(Some(event)) = twilight_gateway::parse(
+                    text.clone(),
+                    twilight_gateway::EventTypeFlags::READY,
+                ) {
+                    match event.into() {
+                        Event::Ready(_bot_info) => {
+                            // we only run global init code on the first shard
+                            if shard_id.number() == 0 {
+                                if !init_done.swap(true, std::sync::atomic::Ordering::SeqCst) {
+                                    handle_first_ready(&mut shard).await
+                                } else {
+                                    tracing::warn!(
+                                        "Event::Ready fired a second time on first shard"
+                                    );
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
 
                 // only publish non-gateway events, aka everything DISPATCH
                 if opcode == OpCode::Dispatch {
-                    // Blindly assuming the first one of these is the Ready event soo
-                    if !init_done.swap(true, std::sync::atomic::Ordering::SeqCst) {
-                        tracing::debug!("setting presence");
-
-                        let state = format!(
-                            " Version: {} ({}{})",
-                            env!("CARGO_PKG_VERSION"),
-                            env!("VERGEN_GIT_SHA"),
-                            match env!("VERGEN_GIT_DIRTY") {
-                                "true" => "-dirty",
-                                _ => "",
-                            }
-                        );
-
-                        if let Err(err) = set_presence(&mut shard, state, Status::Online).await {
-                            tracing::error!(?err, "error setting presence");
-                        }
-                    }
-
                     let event = DiscordEvent::new(shard_id.number(), text);
 
                     rabbitmq_chan
@@ -181,4 +184,22 @@ fn parse_opcode(event: &String) -> Result<Option<OpCode>, Box<dyn Error>> {
     };
 
     Ok(OpCode::from(gateway_deserializer.op()))
+}
+
+async fn handle_first_ready(shard: &mut twilight_gateway::Shard) {
+    tracing::debug!("setting presence");
+
+    let state = format!(
+        " Version: {} ({}{})",
+        env!("CARGO_PKG_VERSION"),
+        env!("VERGEN_GIT_SHA"),
+        match env!("VERGEN_GIT_DIRTY") {
+            "true" => "-dirty",
+            _ => "",
+        }
+    );
+
+    if let Err(err) = set_presence(shard, state, Status::Online).await {
+        tracing::error!(?err, "error setting presence");
+    }
 }
