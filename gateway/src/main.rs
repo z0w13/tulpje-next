@@ -1,6 +1,7 @@
 use std::{env, error::Error};
 
-use bb8_redis::{redis::AsyncCommands, RedisConnectionManager};
+use bb8_redis::RedisConnectionManager;
+use twilight_gateway::EventTypeFlags;
 use twilight_model::gateway::{
     event::Event,
     event::GatewayEventDeserializer,
@@ -14,6 +15,7 @@ use tulpje_shared::DiscordEvent;
 #[cfg(feature = "cache")]
 mod cache;
 mod config;
+mod shard_state;
 
 use config::Config;
 
@@ -99,6 +101,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("error constructing shard ID");
     let mut shard = twilight_gateway::Shard::with_config(shard_id, shard_config);
 
+    // create shard state manager
+    let mut shard_state_manager = shard_state::ShardManager::new(redis.clone(), shard_id.number());
+
     // initialisation done, ratelimit on session_limit
     tracing::info!("waiting for gateway queue...");
     reqwest::get(config.discord_gateway_queue).await?;
@@ -109,7 +114,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         match shard.next_message().await {
             Ok(twilight_gateway::Message::Close(frame)) => {
-                tracing::warn!(?frame, "Message::Close");
+                tracing::warn!(?frame, "gateway connection closed");
+
+                // have to handle this hear separate as twilight_gateway::parse doesn't
+                // parse into Event::GatewayClose as that's a separate event type
+                if let Err(err) = shard_state_manager
+                    .handle_event(Event::GatewayClose(frame), shard.latency())
+                    .await
+                {
+                    tracing::error!("error updating shard state: {}", err);
+                }
             }
             Ok(twilight_gateway::Message::Text(text)) => {
                 let opcode = match parse_opcode(&text) {
@@ -128,11 +142,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 if let Ok(Some(event)) = twilight_gateway::parse(
                     text.clone(),
-                    twilight_gateway::EventTypeFlags::GATEWAY_HEARTBEAT_ACK
-                        | twilight_gateway::EventTypeFlags::READY,
+                    EventTypeFlags::GATEWAY_HEARTBEAT_ACK
+                        | EventTypeFlags::RESUMED
+                        | EventTypeFlags::READY,
                 ) {
+                    if let Err(err) = shard_state_manager
+                        .handle_event(event.clone().into(), shard.latency())
+                        .await
+                    {
+                        tracing::error!("error updating shard state: {}", err);
+                    }
+
                     match event.into() {
-                        Event::GatewayHeartbeatAck => handle_ack(&redis, &shard).await,
                         Event::Ready(_bot_info) => {
                             // we only run global init code on the first shard
                             if shard_id.number() == 0 {
@@ -208,53 +229,6 @@ fn parse_opcode(event: &String) -> Result<Option<OpCode>, Box<dyn Error>> {
     };
 
     Ok(OpCode::from(gateway_deserializer.op()))
-}
-
-async fn handle_ack(redis: &bb8::Pool<RedisConnectionManager>, shard: &twilight_gateway::Shard) {
-    let mut conn = redis.get().await.expect("error acquiring redis connection");
-
-    let shard_id = shard.id().number();
-    let current_latency = match shard.latency().recent().first() {
-        Some(latency) => latency,
-        None => {
-            tracing::error!("latency().recent().first() is empty, shouldn't happen after an ack");
-            return;
-        }
-    };
-    let average_latency = match shard.latency().average() {
-        Some(latency) => latency,
-        None => {
-            tracing::error!("latency().average() is empty, shouldn't happen after an ack");
-            return;
-        }
-    };
-    tracing::info!(
-        ?current_latency,
-        ?average_latency,
-        shard_id,
-        "HeartbeatAck received"
-    );
-
-    if let Err(err) = conn
-        .hset_multiple::<&str, std::string::String, u64, ()>(
-            "shards",
-            &[
-                (
-                    format!("latency_curr_{}", shard_id),
-                    current_latency.as_millis() as u64,
-                ),
-                (
-                    format!("latency_avg_{}", shard_id),
-                    average_latency.as_millis() as u64,
-                ),
-            ],
-        )
-        .await
-    {
-        tracing::error!("error storing latency stats: {}", err);
-    } else {
-        tracing::trace!(shard_id, "latency info stored in db")
-    }
 }
 
 async fn handle_first_ready(shard: &mut twilight_gateway::Shard) {
