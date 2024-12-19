@@ -3158,8 +3158,11 @@ dependencies = [
 name = "tulpje-handler"
 version = "0.1.0"
 dependencies = [
+ "dotenvy",
  "futures",
  "lapin",
+ "serde",
+ "serde-envfile",
  "serde_json",
  "tokio",
  "tokio-executor-trait",

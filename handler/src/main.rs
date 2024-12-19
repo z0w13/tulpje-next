@@ -1,24 +1,39 @@
+mod config;
+
 use futures::StreamExt;
 
 use tulpje_shared::DiscordEvent;
 
+use config::Config;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // load .env into environment vars, ignore if not found
+    match dotenvy::dotenv().map(|_| ()) {
+        Err(err) if err.not_found() => {
+            tracing::warn!("no .env file found");
+            ()
+        }
+        result => result?,
+    };
+
+    // create config from environment vars
+    let config = Config::from_env()?;
+
     // set-up logging
     tracing_subscriber::fmt::init();
 
     // needed for fetching recommended shard count
-    let proxy_address = std::env::var("DISCORD_PROXY").expect("DISCORD_PROXY not set");
     let client = twilight_http::Client::builder()
-        .proxy(proxy_address.clone(), true)
+        .proxy(config.discord_proxy, true)
         .ratelimiter(None)
         .build();
 
-    let rabbitmq_address = std::env::var("RABBITMQ_ADDRESS").expect("RABBITMQ_ADDRESS not set");
     let rabbitmq_options = lapin::ConnectionProperties::default()
         .with_executor(tokio_executor_trait::Tokio::current())
         .with_reactor(tokio_reactor_trait::Tokio);
-    let rabbitmq_conn = lapin::Connection::connect(&rabbitmq_address, rabbitmq_options).await?;
+    let rabbitmq_conn =
+        lapin::Connection::connect(&config.rabbitmq_address, rabbitmq_options).await?;
     let rabbitmq_chan = rabbitmq_conn
         .create_channel()
         .await
