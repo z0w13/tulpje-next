@@ -1,0 +1,9 @@
+[package]
+name = "tulpje-manager"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dotenvy = "0.15.7"
+tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
+twilight-http = { version = "0.15.4", features = ["decompression", "rustls-webpki-roots"], default-features = false }

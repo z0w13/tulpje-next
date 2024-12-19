@@ -1,0 +1,7 @@
+services:
+    rabbitmq:
+        hostname: "CHANGE_TO_HOST_HOSTNAME" # Needed for dev
+        image: "rabbitmq:4.0.4-management"
+        ports:
+            - "5672:5672/tcp" # Dev Only
+            - "15672:15672/tcp" # Management UI (Dev Only)

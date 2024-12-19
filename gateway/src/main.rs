@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{env, error::Error};
 
 use bb8_redis::{redis::AsyncCommands, RedisConnectionManager};
 use twilight_model::gateway::{
@@ -27,6 +27,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         result => result?,
     };
+
+    // parse TASK_SLOT env var if it exists and use it for the shard id
+    if let Ok(task_slot) = env::var("TASK_SLOT") {
+        tracing::info!("TASK_SLOT env var found, using it for shard id");
+        tracing::debug!("TASK_SLOT = {}", task_slot);
+
+        env::set_var(
+            "shard_id",
+            format!(
+                "{}",
+                task_slot.parse::<u64>().expect("couldn't parse task_slot") - 1
+            ),
+        );
+    }
 
     // create config from environment vars
     let config = Config::from_env()?;

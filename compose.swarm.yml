@@ -1,14 +1,20 @@
+version: "3.8"
+
 services:
     gateway:
         image: "tulpje-gateway${IMAGE_SUFFIX}"
-        profiles: [ "full" ]
-        build:
-            context: "."
-            dockerfile: "docker/Dockerfile.gateway"
         init: true
+        deploy:
+            mode: replicated
+            replicas: "${SHARD_COUNT}"
+            update_config:
+                parallelism: 1
+                delay: 10s
+                monitor: 5s
+                order: start-first
         environment:
-            - SHARD_ID
-            - SHARD_COUNT
+            TASK_SLOT: "{{ .Task.Slot }}"
+            SHARD_COUNT: "${SHARD_COUNT}"
         secrets:
             - "rust_log"
             - "discord_token"
@@ -17,49 +23,31 @@ services:
             - "discord_proxy"
             - "redis_url"
         depends_on:
-            valkey: { condition: service_healthy }
-            rabbitmq: { condition: service_healthy }
-            discord_proxy: { condition: service_started }
-            gateway_queue: { condition: service_started }
+            - "valkey"
+            - "rabbitmq"
+            - "discord_proxy"
+            - "gateway_queue"
     handler:
         image: "tulpje-handler${IMAGE_SUFFIX}"
-        profiles: [ "full" ]
-        build:
-            context: "."
-            dockerfile: "docker/Dockerfile.handler"
         init: true
-        environment:
-            - RUST_BACKTRACE=1
         secrets:
             - "rust_log"
             - "rabbitmq_address"
             - "discord_proxy"
             - "redis_url"
         depends_on:
-            valkey: { condition: service_healthy }
-            postgres: { condition: service_healthy }
-            rabbitmq: { condition: service_healthy }
-            discord_proxy: { condition: service_started }
+            - "valkey"
+            - "postgres"
+            - "rabbitmq"
+            - "discord_proxy"
     gateway_queue:
         image: "gateway-queue${IMAGE_SUFFIX}"
-        build:
-            context: "."
-            dockerfile: "docker/Dockerfile.gateway-queue"
-            additional_contexts:
-                upstream: "docker-image://ghcr.io/twilight-rs/gateway-queue@sha256:b6614d239663e3bcc10d9a72bd42d68a41f693d738a55605324b590f0f798417"
         init: true
         # NOTE: Unfortunately can't health check, only endpoint is the queue for rate limiting
         secrets:
             - "discord_token"
     discord_proxy:
         image: "discord-proxy${IMAGE_SUFFIX}"
-        build:
-            context: "."
-            dockerfile: "docker/Dockerfile.discord-proxy"
-            additional_contexts:
-                # https://github.com/twilight-rs/http-proxy/pkgs/container/http-proxy
-                # NOTE: ghcr.io/twilight-rs/http-proxy:metrics but pinned to hash
-                upstream: "docker-image://ghcr.io/twilight-rs/http-proxy@sha256:8404a2b528800233472f8c6a3d10eac7cc2da8364e9a2d86800fee1540f28a28"
         init: true
         healthcheck:
             test: ["CMD", "/bin/check-http", "HEAD", "http://localhost/metrics"]
@@ -81,7 +69,7 @@ services:
             - "postgres_user"
             - "postgres_password"
         healthcheck:
-            test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB}", "-U", "${POSTGRES_USER}"]
+            test: ["CMD-SHELL", "pg_isready", "-d", "${POSTGRES_DB}"]
             interval: 30s
             timeout: 10s
             retries: 3
@@ -113,16 +101,15 @@ services:
         # TODO: Configure persistence
 
 secrets:
-    shard_count:           { environment: "SHARD_COUNT" }
-    discord_token:         { environment: "DISCORD_TOKEN" }
-    postgres_db:           { environment: "POSTGRES_DB" }
-    postgres_user:         { environment: "POSTGRES_USER" }
-    postgres_password:     { environment: "POSTGRES_PASSWORD" }
-    rabbitmq_address:      { environment: "RABBITMQ_ADDRESS" }
-    discord_proxy:         { environment: "DISCORD_PROXY" }
-    discord_gateway_queue: { environment: "DISCORD_GATEWAY_QUEUE" }
-    redis_url:             { environment: "REDIS_URL" }
-    rust_log:              { environment: "RUST_LOG" }
+    discord_token:         { file: "_secrets/discord_token" }
+    postgres_db:           { file: "_secrets/postgres_db" }
+    postgres_user:         { file: "_secrets/postgres_user" }
+    postgres_password:     { file: "_secrets/postgres_password" }
+    rabbitmq_address:      { file: "_secrets/rabbitmq_address" }
+    discord_proxy:         { file: "_secrets/discord_proxy" }
+    discord_gateway_queue: { file: "_secrets/discord_gateway_queue" }
+    redis_url:             { file: "_secrets/redis_url" }
+    rust_log:              { file: "_secrets/rust_log" }
 
 volumes:
     postgres:

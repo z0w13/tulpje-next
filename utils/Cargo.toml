@@ -1,0 +1,15 @@
+[package]
+name = "tulpje-utils"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "secret-loader"
+path = "src/secret_loader.rs"
+
+[[bin]]
+name = "check-http"
+path = "src/check_http.rs"
+
+[dependencies]
+reqwest = { version = "0.12.9", features = ["blocking", "charset", "h2", "http2", "rustls-tls"], default-features = false }

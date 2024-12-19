@@ -1,0 +1,6 @@
+FROM upstream
+
+COPY target/x86_64-unknown-linux-musl/release/secret-loader /bin/secret-loader
+
+ENTRYPOINT [ "/bin/secret-loader" ]
+CMD [ "/twilight-gateway-queue" ]
