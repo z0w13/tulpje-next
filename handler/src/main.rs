@@ -1,5 +1,10 @@
+mod commands;
 mod config;
+mod context;
 
+use std::sync::Arc;
+
+use bb8_redis::RedisConnectionManager;
 use futures::StreamExt;
 
 use tulpje_shared::{DiscordEvent, DiscordEventMeta};
@@ -51,6 +56,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
         .expect("couldn't declare queue");
 
+    // create the redis connection
+    let manager = RedisConnectionManager::new(config.redis_url).expect("error initialising redis");
+    let redis = bb8::Pool::builder()
+        .build(manager)
+        .await
+        .expect("error initialising redis pool");
+
     let mut rabbitmq_consumer = rabbitmq_chan
         .basic_consume(
             "discord",
@@ -65,19 +77,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Client interaction client
     let app = client.current_user_application().await?.model().await?;
-    let interaction = client.interaction(app.id);
+    let context = Arc::new(context::Context {
+        application_id: app.id,
+        services: context::Services { redis },
+        client,
+    });
+    let interaction = context.client.interaction(app.id);
 
-    // register a command
-    // tracing::info!("registering /twilight-test");
-    // let command = twilight_util::builder::command::CommandBuilder::new(
-    //     "twilight-test",
-    //     "test command",
-    //     twilight_model::application::command::CommandType::ChatInput,
-    // )
-    // .dm_permission(false)
-    // .build();
-    // interaction.set_global_commands(&[]).await?;
-    // interaction.set_global_commands(&[command]).await?;
+    // register commands
+    tracing::info!("registering commands");
+    interaction.set_global_commands(&commands::build()).await?;
 
     loop {
         let Some(delivery) = rabbitmq_consumer.next().await else {
@@ -100,40 +109,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         match event {
-            twilight_gateway::Event::InteractionCreate(e) => {
-                tracing::info!(interaction = ?e, "interaction");
+            twilight_gateway::Event::InteractionCreate(event) => {
+                tracing::info!("interaction");
 
                 // handle a command
                 let Some(
                     twilight_model::application::interaction::InteractionData::ApplicationCommand(
                         command,
                     ),
-                ) = &e.data
+                ) = &event.data
                 else {
                     tracing::info!("Not an application command");
                     continue;
                 };
 
-                tracing::info!(command = command.name, "command");
+                let command_context = context::CommandContext {
+                    meta,
+                    context: context.clone(),
+                    command: *command.clone(),
+                    event: *event.clone(),
+                };
 
-                let response = twilight_util::builder::InteractionResponseDataBuilder::new()
-                    .content("ohey")
-                    .flags(twilight_model::channel::message::MessageFlags::EPHEMERAL)
-                    .build();
-
-                if let Err(err) = interaction
-                    .create_response(
-                        e.id,
-                        &e.token,
-                        &twilight_model::http::interaction::InteractionResponse {
-                            kind: twilight_model::http::interaction::InteractionResponseType::ChannelMessageWithSource,
-                            data: Some(response),
-                        },
-                    )
-                    .await
-                {
-                    tracing::warn!(?err, "failed to respond to command")
-                }
+                tracing::info!("processing command /{}", command.name);
+                if let Err(err) = commands::handle(command_context).await {
+                    tracing::warn!("error processing command /{}: {}", command.name, err);
+                };
             }
             e => tracing::warn!(event = ?e.kind(), "unhandled event"),
         }

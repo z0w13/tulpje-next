@@ -1,31 +1,9 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use bb8_redis::{redis::AsyncCommands, RedisConnectionManager};
-use serde::{Deserialize, Serialize};
 use twilight_gateway::{Event, Latency};
 
-#[derive(Serialize, Deserialize, Debug, Default)]
-pub struct ShardState {
-    pub shard_id: u64,
-
-    pub up: bool,
-    pub disconnect_count: u64,
-
-    pub latency: u64,
-
-    pub last_heartbeat: u64,
-    pub last_connection: u64,
-}
-
-impl ShardState {
-    pub fn new(shard_id: u64) -> Self {
-        Self {
-            shard_id,
-
-            ..Default::default()
-        }
-    }
-}
+use tulpje_shared::shard_state::ShardState;
 
 pub struct ShardManager {
     pub redis: bb8::Pool<RedisConnectionManager>,
