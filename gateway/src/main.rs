@@ -32,19 +32,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // set-up logging
     tracing_subscriber::fmt::init();
 
-    // create discord api client
-    let client = twilight_http::Client::builder()
-        .proxy(config.discord_proxy, true)
-        .ratelimiter(None)
-        .build();
-
-    // create the shard
-    let shard_config =
-        twilight_gateway::Config::builder(config.discord_token, twilight_gateway::Intents::all())
-            .build();
-    let mut shard =
-        twilight_gateway::Shard::with_config(twilight_gateway::ShardId::ONE, shard_config);
-
     // create the rabbitmq connection
     let rabbitmq_options = lapin::ConnectionProperties::default()
         .with_executor(tokio_executor_trait::Tokio::current())
@@ -73,6 +60,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // create the cache
     #[cfg(feature = "cache")]
     let cache = redlight::RedisCache::<cache::Config>::new(&config.redis_url).await?;
+
+    // create discord api client
+    let client = twilight_http::Client::builder()
+        .proxy(config.discord_proxy, true)
+        .ratelimiter(None)
+        .build();
+
+    // create the shard
+    tracing::info!("shard: {}, total: {}", config.shard_id, config.shard_count);
+    let shard_config =
+        twilight_gateway::Config::builder(config.discord_token, twilight_gateway::Intents::all())
+            .build();
+    let shard_id = twilight_gateway::ShardId::new_checked(config.shard_id, config.shard_count)
+        .expect("error constructing shard ID");
+    let mut shard = twilight_gateway::Shard::with_config(shard_id, shard_config);
 
     // initialisation done, ratelimit on session_limit
     tracing::info!("waiting for gateway queue...");
@@ -122,7 +124,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
 
-                    let event = DiscordEvent::new(shard.id().number(), text);
+                    let event = DiscordEvent::new(shard_id.number(), text);
 
                     rabbitmq_chan
                         .basic_publish(
