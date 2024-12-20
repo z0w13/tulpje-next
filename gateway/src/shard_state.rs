@@ -7,7 +7,7 @@ use bb8_redis::{redis::AsyncCommands, RedisConnectionManager};
 use twilight_gateway::{Event, Latency};
 
 use tulpje_shared::shard_state::ShardState;
-use twilight_model::gateway::payload::incoming::{GuildCreate, GuildDelete, Ready};
+use twilight_model::gateway::payload::incoming::{GuildCreate, GuildDelete, Hello, Ready};
 
 pub struct ShardManager {
     pub redis: bb8::Pool<RedisConnectionManager>,
@@ -30,6 +30,7 @@ impl ShardManager {
         latency: &Latency,
     ) -> Result<(), Box<dyn std::error::Error>> {
         match event {
+            Event::GatewayHello(hello) => self.helloed(hello).await,
             Event::Ready(info) => self.readied(*info).await,
             Event::GuildCreate(created) => self.guild_created(*created).await,
             Event::GuildDelete(deleted) => self.guild_deleted(deleted).await,
@@ -55,6 +56,16 @@ impl ShardManager {
             .map_err(|err| err.into())
     }
 
+    async fn helloed(&mut self, hello: Hello) -> Result<(), Box<dyn std::error::Error>> {
+        self.shard.heartbeat_interval = hello.heartbeat_interval;
+        self.shard.last_connection = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time went backwards")
+            .as_secs();
+
+        self.save_shard().await
+    }
+
     async fn readied(&mut self, ready: Ready) -> Result<(), Box<dyn std::error::Error>> {
         tracing::info!(
             "shard {} ready ({} guilds)",
@@ -62,14 +73,10 @@ impl ShardManager {
             ready.guilds.len()
         );
 
-        self.shard.up = true;
-        self.shard.last_connection = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("time went backwards")
-            .as_secs();
-
         self.guild_ids
             .extend(ready.guilds.into_iter().map(|g| g.id.get()));
+
+        self.shard.up = true;
         self.shard.guild_count = self
             .guild_ids
             .len()
