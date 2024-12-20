@@ -68,7 +68,7 @@ pub async fn cmd_stats(ctx: CommandContext) -> Result<(), Box<dyn std::error::Er
     let total_shards = shard_stats.len();
     // TODO: Handle dead shards somehow, they don't get cleaned up automatically
     let shards_up = shard_stats.iter().filter(|(_, s)| s.is_up()).count();
-    let guild_count: u64 = shard_stats.iter().map(|(_, s)| s.guild_count).sum();
+    let guild_count: u64 = shard_stats.values().map(|s| s.guild_count).sum();
 
     let Some(current_shard_state) = shard_stats.get(&ctx.meta.shard) else {
         return Err(format!("couldn't get current shard state {}", ctx.meta.shard).into());
@@ -93,11 +93,8 @@ pub async fn cmd_stats(ctx: CommandContext) -> Result<(), Box<dyn std::error::Er
             .inline(),
         )
         .field(
-            EmbedFieldBuilder::new(
-                "Servers",
-                format!("{}", guild_count.to_formatted_string(&Locale::en)),
-            )
-            .inline(),
+            EmbedFieldBuilder::new("Servers", guild_count.to_formatted_string(&Locale::en))
+                .inline(),
         )
         .field(
             EmbedFieldBuilder::new(

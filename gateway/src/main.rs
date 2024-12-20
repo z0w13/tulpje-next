@@ -25,7 +25,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match dotenvy::dotenv().map(|_| ()) {
         Err(err) if err.not_found() => {
             tracing::warn!("no .env file found");
-            ()
         }
         result => result?,
     };
@@ -212,7 +211,7 @@ async fn set_presence(
         url: None,
     }
     .into();
-    activity.state = Some(state.into());
+    activity.state = Some(state);
 
     shard
         .send(serde_json::to_string(&UpdatePresence::new(
@@ -226,7 +225,7 @@ async fn set_presence(
     Ok(())
 }
 
-fn parse_opcode(event: &String) -> Result<Option<OpCode>, Box<dyn Error>> {
+fn parse_opcode(event: &str) -> Result<Option<OpCode>, Box<dyn Error>> {
     let Some(gateway_deserializer) = GatewayEventDeserializer::from_json(event) else {
         return Err("couldn't deserialise event".into());
     };

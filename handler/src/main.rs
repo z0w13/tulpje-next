@@ -17,7 +17,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match dotenvy::dotenv().map(|_| ()) {
         Err(err) if err.not_found() => {
             tracing::warn!("no .env file found");
-            ()
         }
         result => result?,
     };
