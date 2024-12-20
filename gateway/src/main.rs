@@ -143,6 +143,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 if let Ok(Some(event)) = twilight_gateway::parse(
                     text.clone(),
                     EventTypeFlags::GATEWAY_HEARTBEAT_ACK
+                        | EventTypeFlags::GUILD_CREATE
+                        | EventTypeFlags::GUILD_DELETE
                         | EventTypeFlags::RESUMED
                         | EventTypeFlags::READY,
                 ) {

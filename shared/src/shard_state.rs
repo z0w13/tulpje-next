@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ShardState {
     pub shard_id: u64,
+    pub guild_count: u64,
 
     pub up: bool,
     pub disconnect_count: u64,

@@ -1,12 +1,17 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    collections::HashSet,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use bb8_redis::{redis::AsyncCommands, RedisConnectionManager};
 use twilight_gateway::{Event, Latency};
 
 use tulpje_shared::shard_state::ShardState;
+use twilight_model::gateway::payload::incoming::{GuildCreate, GuildDelete, Ready};
 
 pub struct ShardManager {
     pub redis: bb8::Pool<RedisConnectionManager>,
+    pub guild_ids: HashSet<u64>,
     pub shard: ShardState,
 }
 
@@ -14,6 +19,7 @@ impl ShardManager {
     pub fn new(redis: bb8::Pool<RedisConnectionManager>, shard_id: u64) -> Self {
         Self {
             redis,
+            guild_ids: HashSet::new(),
             shard: ShardState::new(shard_id),
         }
     }
@@ -24,8 +30,10 @@ impl ShardManager {
         latency: &Latency,
     ) -> Result<(), Box<dyn std::error::Error>> {
         match event {
-            Event::Ready(_) => self.ready_or_resumed(false).await,
-            Event::Resumed => self.ready_or_resumed(true).await,
+            Event::Ready(info) => self.readied(*info).await,
+            Event::GuildCreate(created) => self.guild_created(*created).await,
+            Event::GuildDelete(deleted) => self.guild_deleted(deleted).await,
+            Event::Resumed => self.resumed().await,
             Event::GatewayClose(_) => self.socket_closed().await,
             Event::GatewayHeartbeatAck => self.heartbeated(latency).await,
             _ => Ok(()),
@@ -47,11 +55,11 @@ impl ShardManager {
             .map_err(|err| err.into())
     }
 
-    async fn ready_or_resumed(&mut self, resumed: bool) -> Result<(), Box<dyn std::error::Error>> {
+    async fn readied(&mut self, ready: Ready) -> Result<(), Box<dyn std::error::Error>> {
         tracing::info!(
-            "shard {} {}",
+            "shard {} ready ({} guilds)",
             self.shard.shard_id,
-            if resumed { "resumed" } else { "ready" }
+            ready.guilds.len()
         );
 
         self.shard.up = true;
@@ -59,6 +67,62 @@ impl ShardManager {
             .duration_since(UNIX_EPOCH)
             .expect("time went backwards")
             .as_secs();
+
+        self.guild_ids
+            .extend(ready.guilds.into_iter().map(|g| g.id.get()));
+        self.shard.guild_count = self
+            .guild_ids
+            .len()
+            .try_into()
+            .expect("couldn't convert len() to u64");
+
+        self.save_shard().await
+    }
+
+    async fn resumed(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        tracing::info!("shard {} resumed", self.shard.shard_id,);
+
+        self.shard.up = true;
+        self.shard.last_connection = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time went backwards")
+            .as_secs();
+
+        self.save_shard().await
+    }
+
+    async fn guild_created(
+        &mut self,
+        created: GuildCreate,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        if !self.guild_ids.insert(created.id.get()) {
+            // guild was already in set, do nothing
+            return Ok(());
+        }
+
+        self.shard.guild_count = self
+            .guild_ids
+            .len()
+            .try_into()
+            .expect("couldn't convert len() to u64");
+
+        self.save_shard().await
+    }
+
+    async fn guild_deleted(
+        &mut self,
+        deleted: GuildDelete,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        if !self.guild_ids.remove(&deleted.id.get()) {
+            // guild wasn't in set, do nothing
+            return Ok(());
+        }
+
+        self.shard.guild_count = self
+            .guild_ids
+            .len()
+            .try_into()
+            .expect("couldn't convert len() to u64");
 
         self.save_shard().await
     }
