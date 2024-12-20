@@ -8,14 +8,14 @@ pub struct DiscordEvent {
     pub payload: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DiscordEventMeta {
     pub uuid: uuid::Uuid, // used for tracing
-    pub shard: u64,
+    pub shard: u32,
 }
 
 impl DiscordEvent {
-    pub fn new(shard: u64, payload: String) -> Self {
+    pub fn new(shard: u32, payload: String) -> Self {
         Self {
             meta: DiscordEventMeta {
                 uuid: uuid::Uuid::now_v7(),

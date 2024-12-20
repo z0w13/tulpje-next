@@ -5,4 +5,5 @@ version.workspace = true
 
 [dependencies]
 serde = { version = "1.0.216", features = ["derive"] }
+twilight-model = "0.16.0-rc.1"
 uuid = { version = "1.11.0", features = ["v7", "serde"] }

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ShardState {
-    pub shard_id: u64,
+    pub shard_id: u32,
     pub guild_count: u64,
 
     pub up: bool,
@@ -19,7 +19,7 @@ pub struct ShardState {
 }
 
 impl ShardState {
-    pub fn new(shard_id: u64) -> Self {
+    pub fn new(shard_id: u32) -> Self {
         Self {
             shard_id,
             last_started: SystemTime::now()

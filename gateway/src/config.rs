@@ -6,8 +6,8 @@ pub struct Config {
     pub discord_token: String,
     pub discord_proxy: String,
     pub discord_gateway_queue: String,
-    pub shard_id: u64,
-    pub shard_count: u64,
+    pub shard_id: u32,
+    pub shard_count: u32,
     pub rabbitmq_address: String,
     pub redis_url: String,
 }

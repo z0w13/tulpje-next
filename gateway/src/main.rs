@@ -1,6 +1,7 @@
 use std::{env, error::Error};
 
 use bb8_redis::RedisConnectionManager;
+use futures_util::StreamExt;
 use twilight_gateway::EventTypeFlags;
 use twilight_model::gateway::{
     event::Event,
@@ -94,8 +95,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // create the shard
     tracing::info!("shard: {}, total: {}", config.shard_id, config.shard_count);
     let shard_config =
-        twilight_gateway::Config::builder(config.discord_token, twilight_gateway::Intents::all())
-            .build();
+        twilight_gateway::Config::new(config.discord_token, twilight_gateway::Intents::all());
     let shard_id = twilight_gateway::ShardId::new_checked(config.shard_id, config.shard_count)
         .expect("error constructing shard ID");
     let mut shard = twilight_gateway::Shard::with_config(shard_id, shard_config);
@@ -111,8 +111,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("starting main loop...");
     let init_done = std::sync::atomic::AtomicBool::new(false);
     loop {
-        match shard.next_message().await {
-            Ok(twilight_gateway::Message::Close(frame)) => {
+        match shard.next().await {
+            Some(Ok(twilight_gateway::Message::Close(frame))) => {
                 tracing::warn!(?frame, "gateway connection closed");
 
                 // have to handle this hear separate as twilight_gateway::parse doesn't
@@ -124,7 +124,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     tracing::error!("error updating shard state: {}", err);
                 }
             }
-            Ok(twilight_gateway::Message::Text(text)) => {
+            Some(Ok(twilight_gateway::Message::Text(text))) => {
                 let opcode = match parse_opcode(&text) {
                     Err(err) => {
                         tracing::error!(?err, "couldn't parse opcode");
@@ -193,8 +193,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     );
                 }
             }
-            Err(err) => {
+            Some(Err(err)) => {
                 tracing::error!(?err, "error receiving discord message");
+            }
+            None => {
+                tracing::error!("received empty message");
             }
         };
     }
@@ -213,14 +216,12 @@ async fn set_presence(
     .into();
     activity.state = Some(state);
 
-    shard
-        .send(serde_json::to_string(&UpdatePresence::new(
-            vec![activity],
-            false,
-            None,
-            status,
-        )?)?)
-        .await?;
+    shard.send(serde_json::to_string(&UpdatePresence::new(
+        vec![activity],
+        false,
+        None,
+        status,
+    )?)?);
 
     Ok(())
 }

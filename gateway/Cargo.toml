@@ -10,11 +10,11 @@ serde_json = "1.0.133"
 tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-twilight-gateway = { version = "0.15.4", features = ["rustls-webpki-roots" ] }
-twilight-http = { version = "0.15.4", features = ["decompression", "rustls-webpki-roots"], default-features = false }
-twilight-model = "0.15.4"
+twilight-gateway = { version = "0.16.0-rc.1", features = ["rustls-webpki-roots" ] }
+twilight-http = { version = "0.16.0-rc.1", features = ["decompression", "rustls-webpki-roots"], default-features = false }
+twilight-model = "0.16.0-rc.1"
 redlight = { git = "https://github.com/MaxOhn/redlight.git", rev = "cd0a65d", version = "0.1.0", features = ["bytecheck"], optional = true }
-twilight-util = { version = "0.15.4", features = ["builder"] }
+twilight-util = { version = "0.16.0-rc.1", features = ["builder"] }
 lapin = "2.5.0"
 tokio-executor-trait = "2.1.3"
 tokio-reactor-trait = "1.1.0"
@@ -25,6 +25,7 @@ dotenvy = "0.15.7"
 reqwest = { version = "0.12.9", default-features = false, features = ["rustls-tls", "charset", "http2"] }
 bb8-redis = "0.18.0"
 bb8 = "0.9.0"
+futures-util = "0.3.31"
 
 [build-dependencies]
 vergen-gitcl = { version = "1.0.1", features = ["build"] }

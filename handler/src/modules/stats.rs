@@ -39,7 +39,7 @@ pub async fn handle_command(ctx: CommandContext) -> Result<(), Box<dyn std::erro
 
 pub async fn get_shard_stats(
     redis: bb8::Pool<RedisConnectionManager>,
-) -> Result<HashMap<u64, ShardState>, Box<dyn std::error::Error>> {
+) -> Result<HashMap<u32, ShardState>, Box<dyn std::error::Error>> {
     Ok(redis
         .get()
         .await?
@@ -159,8 +159,8 @@ pub async fn cmd_stats(ctx: CommandContext) -> Result<(), Box<dyn std::error::Er
     if let Err(err) = ctx
         .interaction()
         .update_response(&ctx.event.token)
-        .content(None)?
-        .embeds(Some(&[embed]))?
+        .content(None)
+        .embeds(Some(&[embed]))
         .await
     {
         tracing::warn!(?err, "failed to respond to command")

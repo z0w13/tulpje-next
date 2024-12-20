@@ -59,7 +59,8 @@ services:
             additional_contexts:
                 # https://github.com/twilight-rs/http-proxy/pkgs/container/http-proxy
                 # NOTE: ghcr.io/twilight-rs/http-proxy:metrics but pinned to hash
-                upstream: "docker-image://ghcr.io/twilight-rs/http-proxy@sha256:8404a2b528800233472f8c6a3d10eac7cc2da8364e9a2d86800fee1540f28a28"
+                # NOTE: using own fork github.com/z0w13/twilight-http-proxy because some routes are missing in upstream
+                upstream: "docker-image://ghcr.io/z0w13/twilight-http-proxy@sha256:d6ed4aa50cc69d52d042f586947b45d84ac10715006c4606d1c3567b103faf6f"
         init: true
         healthcheck:
             test: ["CMD", "/bin/check-http", "HEAD", "http://localhost/metrics"]

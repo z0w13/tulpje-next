@@ -16,7 +16,7 @@ pub struct ShardManager {
 }
 
 impl ShardManager {
-    pub fn new(redis: bb8::Pool<RedisConnectionManager>, shard_id: u64) -> Self {
+    pub fn new(redis: bb8::Pool<RedisConnectionManager>, shard_id: u32) -> Self {
         Self {
             redis,
             guild_ids: HashSet::new(),
