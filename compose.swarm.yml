@@ -35,6 +35,7 @@ services:
             - "rabbitmq_address"
             - "discord_proxy"
             - "redis_url"
+            - "database_url"
         depends_on:
             - "valkey"
             - "postgres"
@@ -105,6 +106,7 @@ secrets:
     postgres_db:           { file: "_secrets/postgres_db" }
     postgres_user:         { file: "_secrets/postgres_user" }
     postgres_password:     { file: "_secrets/postgres_password" }
+    database_url:          { file: "_secrets/database_url" }
     rabbitmq_address:      { file: "_secrets/rabbitmq_address" }
     discord_proxy:         { file: "_secrets/discord_proxy" }
     discord_gateway_queue: { file: "_secrets/discord_gateway_queue" }

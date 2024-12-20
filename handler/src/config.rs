@@ -6,6 +6,7 @@ pub struct Config {
     pub discord_proxy: String,
     pub rabbitmq_address: String,
     pub redis_url: String,
+    pub database_url: String,
 }
 
 impl Config {
