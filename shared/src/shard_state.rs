@@ -44,3 +44,41 @@ impl ShardState {
             && now - self.last_heartbeat < ((self.heartbeat_interval / 1000) as f64 * 1.2) as u64
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn unix_now() -> u64 {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time went backwards")
+            .as_secs()
+    }
+
+    #[test]
+    fn shard_state_is_up_test() {
+        // if `up` is false we should be down
+        let state = ShardState::new(0);
+        assert_eq!(state.is_up(), false);
+
+        // if `up` is true but we have no heartbeat, should be down
+        let mut state = ShardState::new(0);
+        state.up = true;
+        assert_eq!(state.is_up(), false);
+
+        // if `up` is true but we have no recent heartbeat, should be down
+        let mut state = ShardState::new(0);
+        state.up = true;
+        state.last_heartbeat = unix_now() - 1_500;
+        state.heartbeat_interval = 1_000;
+        assert_eq!(state.is_up(), false);
+
+        // if `up` is true and we have recent heartbeat, should be up
+        let mut state = ShardState::new(0);
+        state.up = true;
+        state.last_heartbeat = unix_now();
+        state.heartbeat_interval = 1_000;
+        assert_eq!(state.is_up(), true);
+    }
+}
