@@ -185,7 +185,7 @@ pub async fn cmd_shards(ctx: CommandContext) -> Result<(), Box<dyn std::error::E
             EmbedFieldBuilder::new(
                 format!("Shard #{}", shard.shard_id),
                 format!(
-                    "Latency: {} ms / Uptime: {} / Disconnects: {}",
+                    "Latency: {} ms / Uptime: {} / Servers: {} / Disconnects: {}",
                     shard.latency.to_formatted_string(&Locale::en),
                     tulpje_shared::format_significant_duration(
                         chrono::DateTime::from_timestamp(shard.last_connection.try_into()?, 0)
@@ -194,7 +194,8 @@ pub async fn cmd_shards(ctx: CommandContext) -> Result<(), Box<dyn std::error::E
                             .num_seconds()
                             .unsigned_abs()
                     ),
-                    shard.disconnect_count,
+                    shard.guild_count.to_formatted_string(&Locale::en),
+                    shard.disconnect_count.to_formatted_string(&Locale::en),
                 ),
             )
             .into(),
