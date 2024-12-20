@@ -67,7 +67,7 @@ pub async fn cmd_stats(ctx: CommandContext) -> Result<(), Box<dyn std::error::Er
     let shard_stats = get_shard_stats(ctx.context.services.redis.clone()).await?;
     let total_shards = shard_stats.len();
     // TODO: Handle dead shards somehow, they don't get cleaned up automatically
-    let shards_up = shard_stats.iter().filter(|(_, s)| s.up).count();
+    let shards_up = shard_stats.iter().filter(|(_, s)| s.is_up()).count();
     let guild_count: u64 = shard_stats.iter().map(|(_, s)| s.guild_count).sum();
 
     let Some(current_shard_state) = shard_stats.get(&ctx.meta.shard) else {
@@ -184,19 +184,23 @@ pub async fn cmd_shards(ctx: CommandContext) -> Result<(), Box<dyn std::error::E
         embed.fields.push(
             EmbedFieldBuilder::new(
                 format!("Shard #{}", shard.shard_id),
-                format!(
-                    "Latency: {} ms / Uptime: {} / Servers: {} / Disconnects: {}",
-                    shard.latency.to_formatted_string(&Locale::en),
-                    tulpje_shared::format_significant_duration(
-                        chrono::DateTime::from_timestamp(shard.last_connection.try_into()?, 0)
-                            .ok_or("couldn't create timestamp")?
-                            .signed_duration_since(Utc::now())
-                            .num_seconds()
-                            .unsigned_abs()
-                    ),
-                    shard.guild_count.to_formatted_string(&Locale::en),
-                    shard.disconnect_count.to_formatted_string(&Locale::en),
-                ),
+                if shard.is_up() {
+                    format!(
+                        "Latency: {} ms / Uptime: {} / Servers: {} / Disconnects: {}",
+                        shard.latency.to_formatted_string(&Locale::en),
+                        tulpje_shared::format_significant_duration(
+                            chrono::DateTime::from_timestamp(shard.last_connection.try_into()?, 0)
+                                .ok_or("couldn't create timestamp")?
+                                .signed_duration_since(Utc::now())
+                                .num_seconds()
+                                .unsigned_abs()
+                        ),
+                        shard.guild_count.to_formatted_string(&Locale::en),
+                        shard.disconnect_count.to_formatted_string(&Locale::en),
+                    )
+                } else {
+                    "Down".into()
+                },
             )
             .into(),
         )
