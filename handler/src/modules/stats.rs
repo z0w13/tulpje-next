@@ -18,7 +18,7 @@ use tulpje_shared::shard_state::ShardState;
 
 use crate::context::CommandContext;
 
-pub fn build() -> Vec<Command> {
+pub fn commands() -> Vec<Command> {
     vec![
         CommandBuilder::new("stats", "Bot stats", CommandType::ChatInput)
             .dm_permission(false)
@@ -29,7 +29,7 @@ pub fn build() -> Vec<Command> {
     ]
 }
 
-pub async fn handle(ctx: CommandContext) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_command(ctx: CommandContext) -> Result<(), Box<dyn std::error::Error>> {
     match ctx.command.name.as_str() {
         "stats" => cmd_stats(ctx).await,
         "shards" => cmd_shards(ctx).await,

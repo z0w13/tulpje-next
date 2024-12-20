@@ -1,6 +1,6 @@
-mod commands;
 mod config;
 mod context;
+mod modules;
 
 use std::sync::Arc;
 
@@ -85,7 +85,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // register commands
     tracing::info!("registering commands");
-    interaction.set_global_commands(&commands::build()).await?;
+    interaction
+        .set_global_commands(&modules::stats::commands())
+        .await?;
 
     loop {
         let Some(delivery) = rabbitmq_consumer.next().await else {
@@ -130,7 +132,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 };
 
                 tracing::info!("processing command /{}", command.name);
-                if let Err(err) = commands::handle(command_context).await {
+                if let Err(err) = modules::stats::handle_command(command_context).await {
                     tracing::warn!("error processing command /{}: {}", command.name, err);
                 };
             }
