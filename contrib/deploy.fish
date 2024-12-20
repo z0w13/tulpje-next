@@ -12,9 +12,17 @@ end
 
 echo "* shard count: $SHARD_COUNT"
 echo "* writing secrets from .env to file..."
+
 for L in (cat .env | grep -vE '^(#|$)');
+  set -l varName (string split -f1 "=" "$L")
+  # substitute bash style expansion with fish style
+  set -l varVal (string split -f2 -m1 "=" "$L" | sed 's/${/{$/g')
+
+  # eval the variable so we can get the actual expanded value
+  eval set -x $varName $varVal
+
   # Store each var in .env in a separate file
-  echo (string split -f2 -m1 "=" "$L") > _secrets/(string split -f1 "=" "$L" | string lower);
+  echo $$varName > _secrets/(string split -f1 "=" "$L" | string lower);
 end
 
 # Build binaries
