@@ -1,56 +1,21 @@
 use std::error::Error;
 
 use twilight_model::{
-    application::{
-        command::{Command, CommandType},
-        interaction::application_command::CommandOptionValue,
-    },
+    application::interaction::application_command::CommandOptionValue,
     channel::message::{
         component::{ActionRow, SelectMenu, SelectMenuType},
         Embed,
     },
-    guild::{Guild, Permissions},
+    guild::Guild,
     http::interaction::{InteractionResponse, InteractionResponseType},
 };
-use twilight_util::builder::{
-    command::{CommandBuilder, StringBuilder},
-    embed::EmbedBuilder,
-    InteractionResponseDataBuilder,
-};
+use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
 
 use super::db;
 use crate::{
     context::{CommandContext, ComponentInteractionContext},
     modules::emoji::shared::StatsSort,
 };
-
-pub fn commands() -> Vec<Command> {
-    vec![CommandBuilder::new(
-        "emoji-stats",
-        "Stats for emojis in this server",
-        CommandType::ChatInput,
-    )
-    .default_member_permissions(Permissions::MANAGE_GUILD_EXPRESSIONS)
-    .dm_permission(false)
-    .option(
-        StringBuilder::new("sort", "How to sort the emojis")
-            .choices([
-                ("Most Used", "count_desc"),
-                ("Least Used", "count_asc"),
-                ("Most Recent", "date_desc"),
-                ("Least Recent", "date_asc"),
-            ])
-            .build(),
-    )
-    .build()]
-}
-
-pub async fn handle_command(ctx: CommandContext) -> Result<(), Box<dyn std::error::Error>> {
-    match ctx.command.name.as_str() {
-        "emoji-stats" => cmd_emoji_stats(ctx).await,
-        _ => Ok(()),
-    }
-}
 
 fn create_emoji_stats_sort_menu() -> SelectMenu {
     SelectMenu {
@@ -134,7 +99,7 @@ pub async fn handle_emoji_stats_sort(
         .interaction()
         .update_response(&ctx.event.token)
         .embeds(Some(&[create_emoji_stats_embed(
-            &ctx.context.services.db,
+            &ctx.services.db,
             &guild,
             &sort,
         )
@@ -156,7 +121,7 @@ pub async fn cmd_emoji_stats(ctx: CommandContext) -> Result<(), Box<dyn std::err
 
     let sort = if let Some(option) = ctx.command.options.first() {
         if let CommandOptionValue::String(str) = &option.value {
-            StatsSort::try_from_string(str)?
+            StatsSort::try_from_string(&str)?
         } else {
             StatsSort::CountDesc
         }
@@ -170,7 +135,7 @@ pub async fn cmd_emoji_stats(ctx: CommandContext) -> Result<(), Box<dyn std::err
         kind: InteractionResponseType::ChannelMessageWithSource,
         data: Some(
             InteractionResponseDataBuilder::new()
-                .embeds([create_emoji_stats_embed(&ctx.context.services.db, &guild, &sort).await?])
+                .embeds([create_emoji_stats_embed(&ctx.services.db, &guild, &sort).await?])
                 .components([ActionRow {
                     components: vec![create_emoji_stats_sort_menu().into()],
                 }
@@ -178,7 +143,6 @@ pub async fn cmd_emoji_stats(ctx: CommandContext) -> Result<(), Box<dyn std::err
                 .build(),
         ),
     };
-    tracing::debug!(menu = ?serde_json::to_string(&response));
 
     ctx.response(response).await?;
 

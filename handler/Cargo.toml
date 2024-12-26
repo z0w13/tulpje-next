@@ -27,6 +27,7 @@ bb8 = "0.9.0"
 num-format = "0.4.4"
 regex = "1.11.1"
 sqlx = { version = "0.8.2", features = ["runtime-tokio", "postgres", "chrono", "json", "macros", "migrate"] }
+tulpje-framework = { version = "0.3.0", path = "../framework" }
 
 [build-dependencies]
 vergen-gitcl = { version = "1.0.2", features = ["build"] }

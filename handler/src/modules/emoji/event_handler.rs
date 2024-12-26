@@ -1,4 +1,4 @@
-use std::{collections::HashSet, error::Error, sync::Arc};
+use std::{collections::HashSet, error::Error};
 
 use ::chrono::{DateTime, Utc};
 use sqlx::types::chrono;
@@ -6,25 +6,19 @@ use tracing::{debug, error, trace};
 use twilight_gateway::Event;
 use twilight_model::{
     channel::message::ReactionType,
-    gateway::payload::incoming::{MessageCreate, MessageUpdate, ReactionAdd},
     id::{marker::EmojiMarker, Id},
 };
 
-use crate::context::Context;
+use crate::context::EventContext;
 
 use super::{db, shared};
 use tulpje_shared::is_pk_proxy;
 
-pub async fn handle_event(ctx: Arc<Context>, evt: Event) -> Result<(), Box<dyn Error>> {
-    match evt {
-        Event::MessageCreate(msg) => handle_message(ctx, *msg).await,
-        Event::MessageUpdate(update) => message_update(ctx, *update).await,
-        Event::ReactionAdd(reaction) => reaction_add(ctx, *reaction).await,
-        _ => Ok(()),
-    }
-}
+pub async fn handle_message(ctx: EventContext) -> Result<(), Box<dyn Error>> {
+    let Event::MessageCreate(msg) = &ctx.event else {
+        unreachable!()
+    };
 
-async fn handle_message(ctx: Arc<Context>, msg: MessageCreate) -> Result<(), Box<dyn Error>> {
     // only track messages in guilds
     let Some(guild_id) = msg.guild_id else {
         return Ok(());
@@ -52,7 +46,11 @@ async fn handle_message(ctx: Arc<Context>, msg: MessageCreate) -> Result<(), Box
     Ok(())
 }
 
-async fn message_update(ctx: Arc<Context>, evt: MessageUpdate) -> Result<(), Box<dyn Error>> {
+pub async fn message_update(ctx: EventContext) -> Result<(), Box<dyn Error>> {
+    let Event::MessageUpdate(evt) = &ctx.event else {
+        unreachable!()
+    };
+
     // TODO: Cache isn't implemented yet so we can't do stuff with message difference
     // trace!(has_old = ?old_message.is_some(), "message_update");
     //let Some(old_message) = old_message else {
@@ -71,7 +69,7 @@ async fn message_update(ctx: Arc<Context>, evt: MessageUpdate) -> Result<(), Box
         return Ok(());
     };
 
-    let Some(new_content) = evt.content else {
+    let Some(new_content) = &evt.content else {
         tracing::warn!(
             "no content in message {}, do we have MESSAGE_CONTENT intent?",
             evt.id
@@ -138,7 +136,11 @@ async fn message_update(ctx: Arc<Context>, evt: MessageUpdate) -> Result<(), Box
     Ok(())
 }
 
-async fn reaction_add(ctx: Arc<Context>, reaction: ReactionAdd) -> Result<(), Box<dyn Error>> {
+pub async fn reaction_add(ctx: EventContext) -> Result<(), Box<dyn Error>> {
+    let Event::ReactionAdd(reaction) = &ctx.event else {
+        unreachable!()
+    };
+
     debug!(reaction = ?reaction.emoji, "reaction_add");
     match &reaction.emoji {
         ReactionType::Custom { animated, id, name } => {

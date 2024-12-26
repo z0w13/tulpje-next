@@ -3561,6 +3561,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
+name = "tulpje-framework"
+version = "0.3.0"
+dependencies = [
+ "tracing",
+ "tulpje-shared",
+ "twilight-gateway",
+ "twilight-http",
+ "twilight-model 0.16.0-rc.1",
+ "twilight-util",
+]
+
+[[package]]
 name = "tulpje-gateway"
 version = "0.3.0"
 dependencies = [
@@ -3610,6 +3622,7 @@ dependencies = [
  "tokio-reactor-trait",
  "tracing",
  "tracing-subscriber",
+ "tulpje-framework",
  "tulpje-shared",
  "twilight-gateway",
  "twilight-http",

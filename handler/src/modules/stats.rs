@@ -4,7 +4,7 @@ use bb8_redis::{redis::AsyncCommands, RedisConnectionManager};
 use chrono::Utc;
 use num_format::{Locale, ToFormattedString};
 use twilight_model::{
-    application::command::{Command, CommandType},
+    application::command::CommandType,
     http::interaction::{InteractionResponse, InteractionResponseType},
     util::Timestamp,
 };
@@ -14,27 +14,25 @@ use twilight_util::builder::{
     InteractionResponseDataBuilder,
 };
 
+use tulpje_framework::{handler::command_handler::CommandHandler, registry::Registry};
 use tulpje_shared::shard_state::ShardState;
 
-use crate::context::CommandContext;
+use crate::context::{CommandContext, Services};
 
-pub fn commands() -> Vec<Command> {
-    vec![
-        CommandBuilder::new("stats", "Bot stats", CommandType::ChatInput)
+pub fn setup(registry: &mut Registry<Services>) {
+    registry.command.insert(CommandHandler {
+        definition: CommandBuilder::new("stats", "Bot stats", CommandType::ChatInput)
             .dm_permission(false)
             .build(),
-        CommandBuilder::new("shards", "Stats for bot shards", CommandType::ChatInput)
+        func: |ctx| Box::pin(cmd_stats(ctx)),
+    });
+
+    registry.command.insert(CommandHandler {
+        definition: CommandBuilder::new("shards", "Stats for bot shards", CommandType::ChatInput)
             .dm_permission(false)
             .build(),
-    ]
-}
-
-pub async fn handle_command(ctx: CommandContext) -> Result<(), Box<dyn std::error::Error>> {
-    match ctx.command.name.as_str() {
-        "stats" => cmd_stats(ctx).await,
-        "shards" => cmd_shards(ctx).await,
-        _ => Ok(()),
-    }
+        func: |ctx| Box::pin(cmd_shards(ctx)),
+    });
 }
 
 pub async fn get_shard_stats(
@@ -64,7 +62,7 @@ pub async fn cmd_stats(ctx: CommandContext) -> Result<(), Box<dyn std::error::Er
     let time_after = chrono::Utc::now().timestamp_millis();
     let api_latency = time_after - time_before;
 
-    let shard_stats = get_shard_stats(ctx.context.services.redis.clone()).await?;
+    let shard_stats = get_shard_stats(ctx.services.redis.clone()).await?;
     let total_shards = shard_stats.len();
     // TODO: Handle dead shards somehow, they don't get cleaned up automatically
     let shards_up = shard_stats.iter().filter(|(_, s)| s.is_up()).count();
@@ -170,7 +168,7 @@ pub async fn cmd_stats(ctx: CommandContext) -> Result<(), Box<dyn std::error::Er
 }
 
 pub async fn cmd_shards(ctx: CommandContext) -> Result<(), Box<dyn std::error::Error>> {
-    let mut shard_stats = get_shard_stats(ctx.context.services.redis.clone())
+    let mut shard_stats = get_shard_stats(ctx.services.redis.clone())
         .await?
         .into_values()
         .collect::<Vec<ShardState>>();

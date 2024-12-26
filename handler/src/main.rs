@@ -5,15 +5,15 @@ mod modules;
 use std::{sync::Arc, time::Duration};
 
 use bb8_redis::RedisConnectionManager;
+use context::Services;
 use futures::StreamExt;
 use sqlx::{
     postgres::{PgConnectOptions, PgPoolOptions},
     ConnectOptions,
 };
 use tracing::log::LevelFilter;
-use twilight_model::application::command::Command;
-use twilight_model::application::interaction::InteractionData;
 
+use tulpje_framework::registry::Registry;
 use tulpje_shared::{DiscordEvent, DiscordEventMeta};
 
 use config::Config;
@@ -101,22 +101,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Client interaction client
     let app = client.current_user_application().await?.model().await?;
-    let context = Arc::new(context::Context {
+    let context = context::Context {
         application_id: app.id,
         services: context::Services { redis, db },
-        client,
-    });
-    let interaction = context.client.interaction(app.id);
+        client: Arc::new(client),
+    };
 
-    // register commands
-    tracing::info!("registering commands");
-    interaction
-        .set_global_commands(
-            &vec![modules::stats::commands(), modules::emoji::commands()]
-                .into_iter()
-                .flatten()
-                .collect::<Vec<Command>>(),
-        )
+    // register interaction handlers
+    tracing::info!("registering handlers");
+    let mut registry = Registry::<Services>::new();
+    modules::stats::setup(&mut registry);
+    modules::emoji::setup(&mut registry);
+
+    tracing::info!("registering global commands");
+    context
+        .interaction()
+        .set_global_commands(&registry.get_global_commands())
         .await?;
 
     loop {
@@ -139,64 +139,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "event received",
         );
 
-        match event.clone() {
-            twilight_gateway::Event::InteractionCreate(event) => {
-                tracing::info!("interaction");
-
-                match &event.data {
-                    Some(InteractionData::ApplicationCommand(command)) => {
-                        let command_context = context::CommandContext {
-                            meta,
-                            context: context.clone(),
-                            command: *command.clone(),
-                            event: *event.clone(),
-                        };
-
-                        tracing::info!("processing commmand /{}", command.name);
-
-                        if let Err(err) =
-                            modules::stats::handle_command(command_context.clone()).await
-                        {
-                            tracing::warn!("error processing command /{}: {}", command.name, err);
-                        };
-
-                        if let Err(err) =
-                            modules::emoji::handle_command(command_context.clone()).await
-                        {
-                            tracing::warn!("error processing command /{}: {}", command.name, err);
-                        };
-                    }
-                    Some(InteractionData::MessageComponent(interaction)) => {
-                        let component_interaction_context = context::ComponentInteractionContext {
-                            meta,
-                            context: context.clone(),
-                            interaction: *interaction.clone(),
-                            event: *event.clone(),
-                        };
-
-                        if let Err(err) = modules::emoji::commands::handle_emoji_stats_sort(
-                            component_interaction_context.clone(),
-                        )
-                        .await
-                        {
-                            tracing::warn!(
-                                "error processing interaction {}: {}",
-                                interaction.custom_id,
-                                err
-                            );
-                        };
-                    }
-                    _ => (),
-                }
-            }
-            e => tracing::warn!(event = ?e.kind(), "unhandled event"),
-        }
-
-        if let Err(err) =
-            modules::emoji::event_handler::handle_event(context.clone(), event.clone()).await
-        {
-            tracing::warn!("modules::emoji::event_handler::handle_event: {}", err);
-        }
+        tulpje_framework::handle(meta, context.clone(), &mut registry, event.clone()).await;
     }
 
     Ok(())

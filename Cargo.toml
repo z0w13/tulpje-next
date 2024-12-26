@@ -1,6 +1,6 @@
 [workspace]
 members = [
-	"gateway", "handler", "manager", "utils", "shared",
+	"gateway", "handler", "manager", "utils", "shared", "framework",
 ]
 
 resolver = "2"
