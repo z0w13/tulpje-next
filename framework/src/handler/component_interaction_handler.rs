@@ -1,13 +1,11 @@
-use std::{error::Error, future::Future, pin::Pin};
+use std::{future::Future, pin::Pin};
 
 use super::super::context::ComponentInteractionContext;
-
 use super::InteractionHandler;
+use crate::Error;
 
 type ComponentInteractionFunc<T> =
-    fn(
-        ComponentInteractionContext<T>,
-    ) -> Pin<Box<dyn Future<Output = Result<(), Box<dyn std::error::Error>>>>>;
+    fn(ComponentInteractionContext<T>) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
 
 pub struct ComponentInteractionHandler<T: Clone> {
     pub custom_id: String,
@@ -21,7 +19,7 @@ impl<T: Clone> InteractionHandler<String> for ComponentInteractionHandler<T> {
 }
 
 impl<T: Clone> ComponentInteractionHandler<T> {
-    pub async fn run(&self, ctx: ComponentInteractionContext<T>) -> Result<(), Box<dyn Error>> {
+    pub async fn run(&self, ctx: ComponentInteractionContext<T>) -> Result<(), Error> {
         // can add more handling/parsing/etc here in the future
         (self.func)(ctx).await
     }

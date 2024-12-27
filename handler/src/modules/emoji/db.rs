@@ -1,5 +1,5 @@
 use sqlx::types::chrono;
-use std::error::Error;
+use tulpje_framework::Error;
 
 use super::shared::StatsSort;
 
@@ -80,7 +80,7 @@ pub(crate) async fn save_emoji_use(
     db: &sqlx::PgPool,
     emote: &Emoji,
     timestamp: chrono::DateTime<chrono::Utc>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Error> {
     sqlx::query!(
         "
             INSERT INTO emoji_uses (
@@ -107,7 +107,7 @@ pub(crate) async fn get_emoji_stats(
     db: &sqlx::PgPool,
     guild_id: u64,
     sort: &StatsSort,
-) -> Result<Vec<EmojiStats>, Box<dyn Error>> {
+) -> Result<Vec<EmojiStats>, Error> {
     let order_by_clause = match sort {
         StatsSort::CountDesc => "times_used DESC",
         StatsSort::CountAsc => "times_used ASC",

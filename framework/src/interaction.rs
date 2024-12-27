@@ -1,19 +1,17 @@
-use std::error::Error;
-
 use tulpje_shared::DiscordEventMeta;
 use twilight_model::{
     application::interaction::InteractionData, gateway::payload::incoming::InteractionCreate,
 };
 
-use crate::context::Context;
-
 use super::context;
+use crate::context::Context;
+use crate::Error;
 
 pub fn parse<T: Clone>(
     event: InteractionCreate,
     meta: DiscordEventMeta,
     ctx: Context<T>,
-) -> Result<context::InteractionContext<T>, Box<dyn Error>> {
+) -> Result<context::InteractionContext<T>, Error> {
     match &event.data {
         Some(InteractionData::ApplicationCommand(command)) => {
             Ok(context::InteractionContext::<T>::Command(

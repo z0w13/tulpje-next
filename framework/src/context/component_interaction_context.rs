@@ -1,4 +1,4 @@
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 
 use tulpje_shared::DiscordEventMeta;
 use twilight_http::{client::InteractionClient, response::marker::EmptyBody, Client};
@@ -9,6 +9,8 @@ use twilight_model::{
     http::interaction::InteractionResponse,
     id::{marker::ApplicationMarker, Id},
 };
+
+use crate::Error;
 
 #[derive(Clone, Debug)]
 pub struct ComponentInteractionContext<T: Clone> {
@@ -26,7 +28,7 @@ impl<T: Clone> ComponentInteractionContext<T> {
         self.client.interaction(self.application_id)
     }
 
-    pub async fn guild(&self) -> Result<Option<Guild>, Box<dyn Error>> {
+    pub async fn guild(&self) -> Result<Option<Guild>, Error> {
         let Some(guild_id) = self.event.guild_id else {
             return Ok(None);
         };

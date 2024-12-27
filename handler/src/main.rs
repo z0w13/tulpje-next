@@ -119,28 +119,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .set_global_commands(&registry.get_global_commands())
         .await?;
 
-    loop {
-        let Some(delivery) = rabbitmq_consumer.next().await else {
-            break;
-        };
+    let main_handle = tokio::spawn(async move {
+        loop {
+            let Some(delivery) = rabbitmq_consumer.next().await else {
+                break;
+            };
 
-        let (meta, event) = match parse_delivery(delivery) {
-            Ok((meta, event)) => (meta, event),
-            Err(err) => {
-                tracing::error!(?err, "couldn't parse delivery");
-                continue;
-            }
-        };
+            let (meta, event) = match parse_delivery(delivery) {
+                Ok((meta, event)) => (meta, event),
+                Err(err) => {
+                    tracing::error!(?err, "couldn't parse delivery");
+                    continue;
+                }
+            };
 
-        tracing::debug!(
-            event = ?event.kind(),
-            uuid = ?meta.uuid,
-            shard = meta.shard,
-            "event received",
-        );
+            tracing::debug!(
+                event = ?event.kind(),
+                uuid = ?meta.uuid,
+                shard = meta.shard,
+                "event received",
+            );
 
-        tulpje_framework::handle(meta, context.clone(), &mut registry, event.clone()).await;
-    }
+            tulpje_framework::handle(meta, context.clone(), &mut registry, event.clone()).await;
+        }
+    });
+
+    futures::future::join_all([main_handle]).await;
 
     Ok(())
 }

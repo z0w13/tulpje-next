@@ -1,12 +1,12 @@
 use std::hash::{Hash, Hasher};
-use std::{error::Error, future::Future, pin::Pin};
+use std::{future::Future, pin::Pin};
 
 use twilight_gateway::EventType;
 
 use super::super::context::EventContext;
+use crate::Error;
 
-type EventFunc<T> =
-    fn(EventContext<T>) -> Pin<Box<dyn Future<Output = Result<(), Box<dyn std::error::Error>>>>>;
+type EventFunc<T> = fn(EventContext<T>) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
 
 pub struct EventHandler<T: Clone> {
     pub uuid: String,
@@ -15,7 +15,7 @@ pub struct EventHandler<T: Clone> {
 }
 
 impl<T: Clone> EventHandler<T> {
-    pub async fn run(&self, ctx: EventContext<T>) -> Result<(), Box<dyn Error>> {
+    pub async fn run(&self, ctx: EventContext<T>) -> Result<(), Error> {
         // can add more handling/parsing/etc here in the future
         (self.func)(ctx).await
     }

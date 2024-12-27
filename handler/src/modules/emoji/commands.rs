@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use twilight_model::{
     application::interaction::application_command::CommandOptionValue,
     channel::message::{
@@ -10,6 +8,8 @@ use twilight_model::{
     http::interaction::{InteractionResponse, InteractionResponseType},
 };
 use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
+
+use tulpje_framework::Error;
 
 use super::db;
 use crate::{
@@ -42,7 +42,7 @@ async fn create_emoji_stats_embed(
     db: &sqlx::PgPool,
     guild: &Guild,
     sort: &StatsSort,
-) -> Result<Embed, Box<dyn Error>> {
+) -> Result<Embed, Error> {
     let emoji_stats = db::get_emoji_stats(db, guild.id.get(), sort).await?;
     let emoji_str = if !emoji_stats.is_empty() {
         emoji_stats
@@ -67,9 +67,7 @@ async fn create_emoji_stats_embed(
         .build())
 }
 
-pub async fn handle_emoji_stats_sort(
-    ctx: ComponentInteractionContext,
-) -> Result<(), Box<dyn Error>> {
+pub async fn handle_emoji_stats_sort(ctx: ComponentInteractionContext) -> Result<(), Error> {
     if ctx.interaction.custom_id != "emoji_stats_sort" {
         tracing::debug!(
             "ignoring interaction with incorrect custom_id: {}",
@@ -116,7 +114,7 @@ pub async fn handle_emoji_stats_sort(
     Ok(())
 }
 
-pub async fn cmd_emoji_stats(ctx: CommandContext) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn cmd_emoji_stats(ctx: CommandContext) -> Result<(), Error> {
     tracing::info!(command_info = ?ctx.command.options);
 
     let sort = if let Some(option) = ctx.command.options.first() {

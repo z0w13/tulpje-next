@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error};
+use std::collections::HashMap;
 
 use twilight_http::Client;
 use twilight_model::{
@@ -8,6 +8,8 @@ use twilight_model::{
         Id,
     },
 };
+
+use tulpje_framework::Error;
 
 use super::db;
 
@@ -39,7 +41,7 @@ impl StatsSort {
         }
     }
 
-    pub(crate) fn try_from_string(string: &str) -> Result<Self, Box<dyn Error>> {
+    pub(crate) fn try_from_string(string: &str) -> Result<Self, Error> {
         match string {
             "count_desc" => Ok(Self::CountDesc),
             "count_asc" => Ok(Self::CountAsc),

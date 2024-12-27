@@ -1,4 +1,4 @@
-use std::{collections::HashSet, error::Error};
+use std::collections::HashSet;
 
 use ::chrono::{DateTime, Utc};
 use sqlx::types::chrono;
@@ -11,10 +11,12 @@ use twilight_model::{
 
 use crate::context::EventContext;
 
-use super::{db, shared};
+use tulpje_framework::Error;
 use tulpje_shared::is_pk_proxy;
 
-pub async fn handle_message(ctx: EventContext) -> Result<(), Box<dyn Error>> {
+use super::{db, shared};
+
+pub async fn handle_message(ctx: EventContext) -> Result<(), Error> {
     let Event::MessageCreate(msg) = &ctx.event else {
         unreachable!()
     };
@@ -46,7 +48,7 @@ pub async fn handle_message(ctx: EventContext) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub async fn message_update(ctx: EventContext) -> Result<(), Box<dyn Error>> {
+pub async fn message_update(ctx: EventContext) -> Result<(), Error> {
     let Event::MessageUpdate(evt) = &ctx.event else {
         unreachable!()
     };
@@ -136,7 +138,7 @@ pub async fn message_update(ctx: EventContext) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub async fn reaction_add(ctx: EventContext) -> Result<(), Box<dyn Error>> {
+pub async fn reaction_add(ctx: EventContext) -> Result<(), Error> {
     let Event::ReactionAdd(reaction) = &ctx.event else {
         unreachable!()
     };

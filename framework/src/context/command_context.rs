@@ -1,4 +1,4 @@
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 
 use tulpje_shared::DiscordEventMeta;
 use twilight_http::{client::InteractionClient, response::marker::EmptyBody, Client};
@@ -13,6 +13,7 @@ use twilight_model::{
 use twilight_util::builder::InteractionResponseDataBuilder;
 
 use super::Context;
+use crate::Error;
 
 #[derive(Clone, Debug)]
 pub struct CommandContext<T: Clone> {
@@ -51,7 +52,7 @@ impl<T: Clone> CommandContext<T> {
         self.client.clone()
     }
 
-    pub async fn guild(&self) -> Result<Option<Guild>, Box<dyn Error>> {
+    pub async fn guild(&self) -> Result<Option<Guild>, Error> {
         let Some(guild_id) = self.event.guild_id else {
             return Ok(None);
         };
@@ -101,10 +102,7 @@ impl<T: Clone> CommandContext<T> {
         .await
     }
 
-    pub fn get_arg_string_optional(
-        &self,
-        name: &str,
-    ) -> Result<Option<String>, Box<dyn std::error::Error>> {
+    pub fn get_arg_string_optional(&self, name: &str) -> Result<Option<String>, Error> {
         let Some(opt) = self.command.options.iter().find(|opt| opt.name == name) else {
             return Ok(None);
         };
@@ -116,7 +114,7 @@ impl<T: Clone> CommandContext<T> {
         Ok(Some(value.clone()))
     }
 
-    pub fn get_arg_string(&self, name: &str) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn get_arg_string(&self, name: &str) -> Result<String, Error> {
         if let Some(value) = self.get_arg_string_optional(name)? {
             Ok(value)
         } else {

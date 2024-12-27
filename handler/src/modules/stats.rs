@@ -14,7 +14,7 @@ use twilight_util::builder::{
     InteractionResponseDataBuilder,
 };
 
-use tulpje_framework::{handler::command_handler::CommandHandler, registry::Registry};
+use tulpje_framework::{handler::command_handler::CommandHandler, registry::Registry, Error};
 use tulpje_shared::shard_state::ShardState;
 
 use crate::context::{CommandContext, Services};
@@ -37,7 +37,7 @@ pub fn setup(registry: &mut Registry<Services>) {
 
 pub async fn get_shard_stats(
     redis: bb8::Pool<RedisConnectionManager>,
-) -> Result<HashMap<u32, ShardState>, Box<dyn std::error::Error>> {
+) -> Result<HashMap<u32, ShardState>, Error> {
     Ok(redis
         .get()
         .await?
@@ -56,7 +56,7 @@ pub async fn get_shard_stats(
         .collect())
 }
 
-pub async fn cmd_stats(ctx: CommandContext) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn cmd_stats(ctx: CommandContext) -> Result<(), Error> {
     let time_before = chrono::Utc::now().timestamp_millis();
     ctx.reply("...").await?;
     let time_after = chrono::Utc::now().timestamp_millis();
@@ -167,7 +167,7 @@ pub async fn cmd_stats(ctx: CommandContext) -> Result<(), Box<dyn std::error::Er
     Ok(())
 }
 
-pub async fn cmd_shards(ctx: CommandContext) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn cmd_shards(ctx: CommandContext) -> Result<(), Error> {
     let mut shard_stats = get_shard_stats(ctx.services.redis.clone())
         .await?
         .into_values()

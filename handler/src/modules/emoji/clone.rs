@@ -4,12 +4,14 @@ use twilight_http::Client;
 use twilight_model::id::marker::GuildMarker;
 use twilight_model::id::Id;
 
+use tulpje_framework::Error;
+
 use crate::context::CommandContext;
 use crate::modules::emoji::db::Emoji;
 use crate::modules::emoji::shared::parse_emojis_from_string;
 
 // requires CREATE_GUILD_EXPRESSIONS permission
-pub(crate) async fn command(ctx: CommandContext) -> Result<(), Box<dyn std::error::Error>> {
+pub(crate) async fn command(ctx: CommandContext) -> Result<(), Error> {
     let Some(guild) = ctx.guild().await? else {
         unreachable!("command is guild_only");
     };
@@ -151,7 +153,7 @@ async fn clone_emoji(
 }
 
 pub(crate) enum EmojiError {
-    Other(Emoji, Box<dyn std::error::Error>),
+    Other(Emoji, Error),
     Download(Emoji, reqwest::Error),
     Create(Emoji, twilight_http::Error),
 }

@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use context::{Context, EventContext, InteractionContext};
 use registry::Registry;
 use tulpje_shared::DiscordEventMeta;
@@ -12,12 +10,14 @@ pub mod interaction;
 pub mod macros;
 pub mod registry;
 
+pub type Error = Box<dyn std::error::Error + Send + Sync>;
+
 pub async fn handle_interaction<T: Clone>(
     event: InteractionCreate,
     context: Context<T>,
     meta: &DiscordEventMeta,
     registry: &mut Registry<T>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Error> {
     tracing::info!("interaction");
 
     match interaction::parse(event.clone(), meta.clone(), context) {
