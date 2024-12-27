@@ -1,6 +1,6 @@
 pub mod commands;
 pub mod db;
-pub mod event_handler;
+pub mod event_handlers;
 pub mod shared;
 
 use twilight_gateway::EventType;
@@ -8,10 +8,12 @@ use twilight_model::{application::command::CommandType, guild::Permissions};
 use twilight_util::builder::command::{CommandBuilder, StringBuilder};
 
 use tulpje_framework::{
+    command, component_interaction, event_handler,
     handler::{
         command_handler::CommandHandler,
         component_interaction_handler::ComponentInteractionHandler, event_handler::EventHandler,
     },
+    handler_func,
     registry::Registry,
 };
 
@@ -19,8 +21,9 @@ use crate::context::Services;
 
 pub fn setup(registry: &mut Registry<Services>) {
     // commands
-    registry.command.insert(CommandHandler {
-        definition: CommandBuilder::new(
+    command!(
+        registry,
+        CommandBuilder::new(
             "emoji-stats",
             "Stats for emojis in this server",
             CommandType::ChatInput,
@@ -38,31 +41,30 @@ pub fn setup(registry: &mut Registry<Services>) {
                 .build(),
         )
         .build(),
-        func: |ctx| Box::pin(commands::cmd_emoji_stats(ctx)),
-    });
+        commands::cmd_emoji_stats,
+    );
 
     // component interactions
-    registry
-        .component_interaction
-        .insert(ComponentInteractionHandler {
-            custom_id: "emoji_stats_sort".into(),
-            func: |ctx| Box::pin(commands::handle_emoji_stats_sort(ctx)),
-        });
+    component_interaction!(
+        registry,
+        "emoji_stats_sort",
+        commands::handle_emoji_stats_sort
+    );
 
     // event handlers
-    registry.event.insert(EventHandler {
-        uuid: uuid::Uuid::now_v7().to_string(),
-        event: EventType::MessageCreate,
-        func: |ctx| Box::pin(event_handler::handle_message(ctx)),
-    });
-    registry.event.insert(EventHandler {
-        uuid: uuid::Uuid::now_v7().to_string(),
-        event: EventType::MessageUpdate,
-        func: |ctx| Box::pin(event_handler::message_update(ctx)),
-    });
-    registry.event.insert(EventHandler {
-        uuid: uuid::Uuid::now_v7().to_string(),
-        event: EventType::ReactionAdd,
-        func: |ctx| Box::pin(event_handler::reaction_add(ctx)),
-    });
+    event_handler!(
+        registry,
+        EventType::MessageCreate,
+        event_handlers::handle_message,
+    );
+    event_handler!(
+        registry,
+        EventType::MessageUpdate,
+        event_handlers::message_update,
+    );
+    event_handler!(
+        registry,
+        EventType::ReactionAdd,
+        event_handlers::reaction_add,
+    );
 }

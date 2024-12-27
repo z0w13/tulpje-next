@@ -9,6 +9,7 @@ use twilight_model::gateway::payload::incoming::InteractionCreate;
 pub mod context;
 pub mod handler;
 pub mod interaction;
+pub mod macros;
 pub mod registry;
 
 pub async fn handle_interaction<T: Clone>(
