@@ -4,6 +4,7 @@ use tulpje_shared::DiscordEventMeta;
 use twilight_http::{client::InteractionClient, response::marker::EmptyBody, Client};
 use twilight_model::{
     application::interaction::application_command::{CommandData, CommandOptionValue},
+    channel::Message,
     gateway::payload::incoming::InteractionCreate,
     guild::Guild,
     http::interaction::{InteractionResponse, InteractionResponseType},
@@ -64,6 +65,16 @@ impl<T: Clone> CommandContext<T> {
     ) -> Result<twilight_http::Response<EmptyBody>, twilight_http::Error> {
         self.interaction()
             .create_response(self.event.id, &self.event.token, &response)
+            .await
+    }
+
+    pub async fn update(
+        &self,
+        message: impl Into<String>,
+    ) -> Result<twilight_http::Response<Message>, twilight_http::Error> {
+        self.interaction()
+            .update_response(&self.event.token)
+            .content(Some(&message.into()))
             .await
     }
 
