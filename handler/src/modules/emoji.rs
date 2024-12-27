@@ -1,3 +1,4 @@
+pub mod clone;
 pub mod commands;
 pub mod db;
 pub mod event_handlers;
@@ -42,6 +43,25 @@ pub fn setup(registry: &mut Registry<Services>) {
         )
         .build(),
         commands::cmd_emoji_stats,
+    );
+    command!(
+        registry,
+        CommandBuilder::new(
+            "emoji-clone",
+            "clone an emoji to this server",
+            CommandType::ChatInput
+        )
+        .default_member_permissions(Permissions::MANAGE_GUILD_EXPRESSIONS)
+        .dm_permission(false)
+        .option(
+            StringBuilder::new("emoji", "emojis to clone")
+                .required(true)
+                .build()
+        )
+        .option(StringBuilder::new("new_name", "new name (only if cloning a single emoji)").build())
+        .option(StringBuilder::new("prefix", "prefix for new emoji(s)").build())
+        .build(),
+        clone::command,
     );
 
     // component interactions

@@ -28,6 +28,8 @@ num-format = "0.4.4"
 regex = "1.11.1"
 sqlx = { version = "0.8.2", features = ["runtime-tokio", "postgres", "chrono", "json", "macros", "migrate"] }
 tulpje-framework = { version = "0.3.0", path = "../framework" }
+reqwest = { version = "0.12.9", default-features = false, features = ["rustls-tls", "charset", "http2"] }
+base64 = "0.22.1"
 
 [build-dependencies]
 vergen-gitcl = { version = "1.0.2", features = ["build"] }
