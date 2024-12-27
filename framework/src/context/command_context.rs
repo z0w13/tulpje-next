@@ -93,6 +93,14 @@ impl<T: Clone> CommandContext<T> {
         .await
     }
 
+    pub async fn defer(&self) -> Result<twilight_http::Response<EmptyBody>, twilight_http::Error> {
+        self.response(InteractionResponse {
+            kind: InteractionResponseType::DeferredChannelMessageWithSource,
+            data: None,
+        })
+        .await
+    }
+
     pub fn get_arg_string_optional(
         &self,
         name: &str,
