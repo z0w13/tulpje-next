@@ -11,6 +11,8 @@ use twilight_model::{
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
+use super::Context;
+
 #[derive(Clone, Debug)]
 pub struct CommandContext<T: Clone> {
     pub meta: DiscordEventMeta,
@@ -23,6 +25,23 @@ pub struct CommandContext<T: Clone> {
 }
 
 impl<T: Clone> CommandContext<T> {
+    pub fn from_context(
+        meta: DiscordEventMeta,
+        ctx: Context<T>,
+        event: InteractionCreate,
+        command: CommandData,
+    ) -> Self {
+        Self {
+            meta,
+            application_id: ctx.application_id,
+            client: ctx.client,
+            services: ctx.services.clone(),
+
+            command,
+            event,
+        }
+    }
+
     pub fn interaction(&self) -> InteractionClient<'_> {
         self.client.interaction(self.application_id)
     }

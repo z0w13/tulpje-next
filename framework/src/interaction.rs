@@ -15,17 +15,11 @@ pub fn parse<T: Clone>(
     ctx: Context<T>,
 ) -> Result<context::InteractionContext<T>, Box<dyn Error>> {
     match &event.data {
-        Some(InteractionData::ApplicationCommand(command)) => Ok(
-            context::InteractionContext::<T>::Command(context::CommandContext {
-                meta,
-                application_id: ctx.application_id,
-                client: ctx.client,
-                services: ctx.services.clone(),
-
-                command: *command.clone(),
-                event: event.clone(),
-            }),
-        ),
+        Some(InteractionData::ApplicationCommand(command)) => {
+            Ok(context::InteractionContext::<T>::Command(
+                context::CommandContext::from_context(meta, ctx, event.clone(), *command.clone()),
+            ))
+        }
         Some(InteractionData::MessageComponent(interaction)) => {
             Ok(context::InteractionContext::<T>::ComponentInteraction(
                 context::ComponentInteractionContext {
