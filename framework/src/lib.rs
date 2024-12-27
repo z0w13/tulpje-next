@@ -12,7 +12,7 @@ pub mod registry;
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
-pub async fn handle_interaction<T: Clone>(
+pub async fn handle_interaction<T: Clone + Send + Sync>(
     event: InteractionCreate,
     context: Context<T>,
     meta: &DiscordEventMeta,
@@ -59,7 +59,7 @@ pub async fn handle_interaction<T: Clone>(
     Ok(())
 }
 
-pub async fn handle<T: Clone>(
+pub async fn handle<T: Clone + Send + Sync>(
     meta: DiscordEventMeta,
     ctx: Context<T>,
     registry: &mut Registry<T>,

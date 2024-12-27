@@ -20,7 +20,7 @@ use tulpje_framework::{
 
 use crate::context::Services;
 
-pub fn setup(registry: &mut Registry<Services>) {
+pub async fn setup(registry: &mut Registry<Services>) {
     // commands
     command!(
         registry,

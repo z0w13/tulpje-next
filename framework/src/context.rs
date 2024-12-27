@@ -8,11 +8,13 @@ pub mod command_context;
 pub mod component_interaction_context;
 pub mod event_context;
 pub mod modal_context;
+pub mod task_context;
 
 pub use command_context::CommandContext;
 pub use component_interaction_context::ComponentInteractionContext;
 pub use event_context::EventContext;
 pub use modal_context::ModalContext;
+pub use task_context::TaskContext;
 
 #[derive(Debug)]
 pub struct Context<T: Clone> {

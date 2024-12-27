@@ -36,3 +36,17 @@ macro_rules! component_interaction {
             })
     };
 }
+
+#[macro_export]
+macro_rules! task {
+    ($reg:expr, $name:expr, $schedule:expr, $func:expr $(,)?) => {
+        $reg.task
+            .insert(TaskHandler {
+                name: $name.into(),
+                cron: async_cron_scheduler::cron::Schedule::try_from($schedule)
+                    .expect("failed to parse cron expression"),
+                func: |ctx| Box::pin($func(ctx)),
+            })
+            .await
+    };
+}

@@ -10,3 +10,6 @@ twilight-model = "0.16.0-rc.1"
 twilight-gateway = "0.16.0-rc.1"
 twilight-util = { version = "0.16.0-rc.1", features = ["builder"] }
 tracing = "0.1.41"
+async-cron-scheduler = { version = "2.0.1", features = ["logging"] }
+chrono = "0.4.39"
+tokio = "1.42.0"

@@ -109,9 +109,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // register interaction handlers
     tracing::info!("registering handlers");
-    let mut registry = Registry::<Services>::new();
-    modules::stats::setup(&mut registry);
-    modules::emoji::setup(&mut registry);
+    let mut registry = Registry::<Services>::new(context.clone());
+    modules::stats::setup(&mut registry).await;
+    modules::emoji::setup(&mut registry).await;
+
+    // start the task scheduler
+    let sched_handle = registry.task.run().await;
 
     tracing::info!("registering global commands");
     context
@@ -144,7 +147,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    futures::future::join_all([main_handle]).await;
+    futures::future::join_all([main_handle, sched_handle]).await;
 
     Ok(())
 }

@@ -19,7 +19,7 @@ use tulpje_shared::shard_state::ShardState;
 
 use crate::context::{CommandContext, Services};
 
-pub fn setup(registry: &mut Registry<Services>) {
+pub async fn setup(registry: &mut Registry<Services>) {
     registry.command.insert(CommandHandler {
         definition: CommandBuilder::new("stats", "Bot stats", CommandType::ChatInput)
             .dm_permission(false)
