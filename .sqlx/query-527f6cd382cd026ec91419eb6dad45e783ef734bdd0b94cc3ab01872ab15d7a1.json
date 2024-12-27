@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(DISTINCT system_id) FROM pk_fronters INNER JOIN pk_guilds ON pk_fronters.guild_id = pk_guilds.guild_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "527f6cd382cd026ec91419eb6dad45e783ef734bdd0b94cc3ab01872ab15d7a1"
+}

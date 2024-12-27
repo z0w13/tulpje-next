@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT guild_id, user_id, system_id, token FROM pk_guilds",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "guild_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "system_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "token",
+        "type_info": "Bpchar"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "e11ad169a511c9a8ab09b93797dfcaaf74ef85799891c5fb4b359b8e0cf8962d"
+}

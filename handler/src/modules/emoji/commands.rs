@@ -119,7 +119,7 @@ pub async fn cmd_emoji_stats(ctx: CommandContext) -> Result<(), Error> {
 
     let sort = if let Some(option) = ctx.command.options.first() {
         if let CommandOptionValue::String(str) = &option.value {
-            StatsSort::try_from_string(&str)?
+            StatsSort::try_from_string(str)?
         } else {
             StatsSort::CountDesc
         }

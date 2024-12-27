@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use twilight_model::id::{marker::ApplicationMarker, Id};
 
+pub mod color;
 pub mod shard_state;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -65,11 +66,11 @@ mod tests {
 
     #[test]
     fn is_pk_proxy_test() {
-        assert!(is_pk_proxy(&Some(serenity::ApplicationId::new(
+        assert!(is_pk_proxy(&Some(Id::<ApplicationMarker>::new(
             466378653216014359
         ))));
 
-        assert!(!is_pk_proxy(&Some(serenity::ApplicationId::new(1))));
+        assert!(!is_pk_proxy(&Some(Id::<ApplicationMarker>::new(1))));
         assert!(!is_pk_proxy(&None));
     }
 }

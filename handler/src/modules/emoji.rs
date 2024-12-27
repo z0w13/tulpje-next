@@ -14,7 +14,6 @@ use tulpje_framework::{
         command_handler::CommandHandler,
         component_interaction_handler::ComponentInteractionHandler, event_handler::EventHandler,
     },
-    handler_func,
     registry::Registry,
 };
 

@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO pk_guilds (guild_id, user_id, system_id, token) VALUES ($1, $2, $3, $4) ON CONFLICT (guild_id) DO UPDATE SET system_id = $3, token = $4",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Varchar",
+        "Bpchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a365e448c928a117265bc775cfe026e7279a87cb4d43fd63571afc18cb314c96"
+}

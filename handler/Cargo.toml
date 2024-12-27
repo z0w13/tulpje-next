@@ -31,6 +31,8 @@ tulpje-framework = { version = "0.3.0", path = "../framework" }
 reqwest = { version = "0.12.9", default-features = false, features = ["rustls-tls", "charset", "http2"] }
 base64 = "0.22.1"
 async-cron-scheduler = { version = "2.0.1", features = ["logging"] }
+pkrs = { git = "https://github.com/z0w13/pkrs.git", version = "0.4.0", default-features = false, features = ["reqwest-client", "rustls-tls"] }
+serde_either = "0.2.1"
 
 [build-dependencies]
 vergen-gitcl = { version = "1.0.2", features = ["build"] }

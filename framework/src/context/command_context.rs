@@ -4,7 +4,7 @@ use tulpje_shared::DiscordEventMeta;
 use twilight_http::{client::InteractionClient, response::marker::EmptyBody, Client};
 use twilight_model::{
     application::interaction::application_command::{CommandData, CommandOptionValue},
-    channel::Message,
+    channel::{message::MessageFlags, Message},
     gateway::payload::incoming::InteractionCreate,
     guild::Guild,
     http::interaction::{InteractionResponse, InteractionResponseType},
@@ -98,6 +98,19 @@ impl<T: Clone> CommandContext<T> {
         self.response(InteractionResponse {
             kind: InteractionResponseType::DeferredChannelMessageWithSource,
             data: None,
+        })
+        .await
+    }
+    pub async fn defer_ephemeral(
+        &self,
+    ) -> Result<twilight_http::Response<EmptyBody>, twilight_http::Error> {
+        self.response(InteractionResponse {
+            kind: InteractionResponseType::DeferredChannelMessageWithSource,
+            data: Some(
+                InteractionResponseDataBuilder::new()
+                    .flags(MessageFlags::EPHEMERAL)
+                    .build(),
+            ),
         })
         .await
     }

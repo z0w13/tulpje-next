@@ -104,7 +104,7 @@ pub async fn message_update(ctx: EventContext) -> Result<(), Error> {
     );
 
     let new_emote_count = shared::count_emojis(
-        shared::parse_emojis_from_string(guild_id.get(), &new_content)
+        shared::parse_emojis_from_string(guild_id.get(), new_content)
             .into_iter()
             .filter(|e| guild_emojis.contains(&e.id))
             .collect::<Vec<db::Emoji>>(),

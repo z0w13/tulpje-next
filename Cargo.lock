@@ -830,6 +830,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b42b6fa04a440b495c8b04d0e71b707c585f83cb9cb28cf8cd0d976c315e31b4"
 dependencies = [
  "powerfmt",
+ "serde",
 ]
 
 [[package]]
@@ -2214,6 +2215,19 @@ name = "pkg-config"
 version = "0.3.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "953ec861398dccce10c670dfeaf3ec4911ca479e9c02154b3a215178c5f566f2"
+
+[[package]]
+name = "pkrs"
+version = "0.4.0"
+source = "git+https://github.com/z0w13/pkrs.git#c440be807ca3645bf303b43d0e79d2d82987eebc"
+dependencies = [
+ "reqwest",
+ "serde",
+ "serde_either",
+ "time",
+ "url",
+ "uuid",
+]
 
 [[package]]
 name = "polling"
@@ -3725,6 +3739,7 @@ dependencies = [
  "futures",
  "lapin",
  "num-format",
+ "pkrs",
  "regex",
  "reqwest",
  "serde",
@@ -3935,6 +3950,7 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+ "serde",
 ]
 
 [[package]]

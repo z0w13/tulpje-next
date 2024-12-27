@@ -112,6 +112,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut registry = Registry::<Services>::new(context.clone());
     modules::stats::setup(&mut registry).await;
     modules::emoji::setup(&mut registry).await;
+    modules::pk::setup(&mut registry).await;
 
     // start the task scheduler
     let sched_handle = registry.task.run().await;
