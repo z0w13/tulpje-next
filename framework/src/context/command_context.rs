@@ -3,7 +3,7 @@ use std::{error::Error, sync::Arc};
 use tulpje_shared::DiscordEventMeta;
 use twilight_http::{client::InteractionClient, response::marker::EmptyBody, Client};
 use twilight_model::{
-    application::interaction::application_command::CommandData,
+    application::interaction::application_command::{CommandData, CommandOptionValue},
     gateway::payload::incoming::InteractionCreate,
     guild::Guild,
     http::interaction::{InteractionResponse, InteractionResponseType},
@@ -80,5 +80,28 @@ impl<T: Clone> CommandContext<T> {
             data: Some(response),
         })
         .await
+    }
+
+    pub fn get_arg_string_optional(
+        &self,
+        name: &str,
+    ) -> Result<Option<String>, Box<dyn std::error::Error>> {
+        let Some(opt) = self.command.options.iter().find(|opt| opt.name == name) else {
+            return Ok(None);
+        };
+
+        let CommandOptionValue::String(value) = &opt.value else {
+            return Err(format!("option '{}' not a string option", name).into());
+        };
+
+        Ok(Some(value.clone()))
+    }
+
+    pub fn get_arg_string(&self, name: &str) -> Result<String, Box<dyn std::error::Error>> {
+        if let Some(value) = self.get_arg_string_optional(name)? {
+            Ok(value)
+        } else {
+            Err(format!("couldn't find command argument {}", name).into())
+        }
     }
 }
