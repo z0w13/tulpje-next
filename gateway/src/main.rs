@@ -155,6 +155,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         tracing::error!("error updating shard state: {}", err);
                     }
 
+                    #[expect(clippy::single_match, reason = "this might be expanded in the future")]
                     match event.into() {
                         Event::Ready(_bot_info) => {
                             // we only run global init code on the first shard
