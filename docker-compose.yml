@@ -1,3 +1,5 @@
+name: "tulpje"
+
 services:
     gateway:
         image: "tulpje-gateway${IMAGE_SUFFIX}"
