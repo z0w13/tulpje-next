@@ -1,4 +1,4 @@
-# Tulpje (Next)
+# Tulpje
 
 Unnecessarily complicated rewrite of a multi-purpose discord bot
 

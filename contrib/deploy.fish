@@ -35,4 +35,4 @@ docker compose --profile=full build
 
 # Deploy images
 echo "* deploying..."
-docker stack deploy --detach=false -c compose.swarm.yml tulpje-next-staging
+docker stack deploy --detach=false -c compose.swarm.yml tulpje-staging
