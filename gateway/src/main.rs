@@ -86,12 +86,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "cache")]
     let cache = redlight::RedisCache::<cache::Config>::new(&config.redis_url).await?;
 
-    // create discord api client
-    let client = twilight_http::Client::builder()
-        .proxy(config.discord_proxy, true)
-        .ratelimiter(None)
-        .build();
-
     // create the shard
     tracing::info!("shard: {}, total: {}", config.shard_id, config.shard_count);
     let shard_config =
