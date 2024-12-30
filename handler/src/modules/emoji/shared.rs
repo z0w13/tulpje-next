@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr};
 
 use twilight_http::Client;
 use twilight_model::{
@@ -64,17 +64,17 @@ impl From<StatsSort> for SelectMenuOption {
     }
 }
 
-pub(crate) fn parse_emojis_from_string(guild_id: u64, content: &str) -> Vec<db::Emoji> {
+pub(crate) fn parse_emojis_from_string(guild_id: Id<GuildMarker>, content: &str) -> Vec<db::Emoji> {
     let re = regex::Regex::new(r"<(a?):([[:word:]]+):([[:digit:]]+)>").unwrap();
     re.captures_iter(content)
         .map(|caps| {
             let (_, [animated, name, id]) = caps.extract();
-            db::Emoji {
-                animated: animated == "a",
+            db::Emoji::new(
+                Id::<EmojiMarker>::from_str(id).unwrap(),
                 guild_id,
-                id: id.parse::<u64>().unwrap(),
-                name: name.to_string(),
-            }
+                name.to_string(),
+                animated == "a",
+            )
         })
         .collect()
 }
@@ -110,22 +110,23 @@ mod tests {
 
     #[test]
     fn parse_emojis_from_string_test() {
-        let result = parse_emojis_from_string(0, "<a:animated:0> <:static:1>");
+        let result =
+            parse_emojis_from_string(Id::<GuildMarker>::new(1), "<a:animated:1> <:static:2>");
         assert_eq!(
             result,
             vec![
-                db::Emoji {
-                    id: 0,
-                    guild_id: 0,
-                    name: String::from("animated"),
-                    animated: true
-                },
-                db::Emoji {
-                    id: 1,
-                    guild_id: 0,
-                    name: String::from("static"),
-                    animated: false
-                }
+                db::Emoji::new(
+                    Id::<EmojiMarker>::new(1),
+                    Id::<GuildMarker>::new(1),
+                    String::from("animated"),
+                    true
+                ),
+                db::Emoji::new(
+                    Id::<EmojiMarker>::new(2),
+                    Id::<GuildMarker>::new(1),
+                    String::from("animated"),
+                    true
+                ),
             ]
         )
     }
@@ -134,15 +135,15 @@ mod tests {
     fn count_emojis_test() {
         // emoji creation helper func
         fn emoji(id: u64) -> db::Emoji {
-            db::Emoji {
-                id,
-                guild_id: 0,
-                name: String::from("foo"),
-                animated: false,
-            }
+            db::Emoji::new(
+                Id::<EmojiMarker>::new(id),
+                Id::<GuildMarker>::new(1),
+                String::from("foo"),
+                false,
+            )
         }
 
-        let result = count_emojis(vec![emoji(0), emoji(0), emoji(1)]);
-        assert_eq!(result, HashMap::from([(emoji(0), 2), (emoji(1), 1)]));
+        let result = count_emojis(vec![emoji(1), emoji(1), emoji(2)]);
+        assert_eq!(result, HashMap::from([(emoji(1), 2), (emoji(2), 1)]));
     }
 }

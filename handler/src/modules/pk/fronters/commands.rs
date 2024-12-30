@@ -196,11 +196,11 @@ pub(crate) async fn update_fronters(ctx: CommandContext) -> Result<(), Error> {
 
     ctx.defer_ephemeral().await?;
 
-    let cat_id = db::get_fronter_category(&ctx.services.db, guild.id.get())
+    let cat_id = db::get_fronter_category(&ctx.services.db, guild.id)
         .await?
         .ok_or("fronter category not set-up, please run /setup-fronters")?;
 
-    let gs = get_guild_settings_for_id(&ctx.services.db, guild.id.get())
+    let gs = get_guild_settings_for_id(&ctx.services.db, guild.id)
         .await?
         .ok_or("PluralKit module not set-up, please run /setup-pk")?;
 
@@ -258,7 +258,7 @@ pub(crate) async fn setup_fronters(ctx: CommandContext) -> Result<(), Error> {
     let fronters_category = create_or_get_fronter_channel(&ctx.client, &guild, name).await?;
 
     // Save category into db
-    db::save_fronter_category(&ctx.services.db, guild.id.get(), fronters_category.id.get()).await?;
+    db::save_fronter_category(&ctx.services.db, guild.id, fronters_category.id).await?;
 
     // Inform user of success
     ctx.update("fronter list setup!").await?;

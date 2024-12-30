@@ -125,7 +125,7 @@ pub(crate) async fn update_member_roles(ctx: CommandContext) -> Result<(), Error
 
     ctx.defer_ephemeral().await?; // delay responding and make reply ephemeral
 
-    let gs = get_guild_settings_for_id(&ctx.services.db, guild.id.get())
+    let gs = get_guild_settings_for_id(&ctx.services.db, guild.id)
         .await?
         .ok_or("PluralKit module not set-up, please run /setup-pk")?;
 

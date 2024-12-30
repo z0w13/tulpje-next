@@ -1,9 +1,5 @@
 use tracing::{error, info, warn};
 use twilight_http::Client;
-use twilight_model::id::{
-    marker::{ChannelMarker, GuildMarker},
-    Id,
-};
 
 use tulpje_framework::Error;
 
@@ -16,17 +12,19 @@ pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
     let guild_settings = pk::db::get_guild_settings(&ctx.services.db).await?;
 
     for cat in fronter_cats {
-        let cur_guild_settings = guild_settings
-            .iter()
-            .find(|gs| u64::try_from(gs.guild_id).unwrap() == cat.guild_id);
+        let cur_guild_settings = guild_settings.iter().find(|gs| gs.guild_id == cat.guild_id);
 
         if let Some(gs) = cur_guild_settings {
             if let Err(err) = update_fronters_for_guild(&ctx.client, gs, &cat).await {
-                error!(guild_id = cat.guild_id, category_id = cat.category_id, err);
+                error!(
+                    guild_id = ?cat.guild_id,
+                    category_id = ?cat.category_id,
+                    err
+                );
             }
         } else {
             warn!(
-                guild_id = cat.guild_id,
+                guild_id = ?cat.guild_id,
                 "couldn't find guild settings for guild"
             );
         }
@@ -40,14 +38,10 @@ async fn update_fronters_for_guild(
     gs: &ModPkGuildRow,
     cat: &ModPkFrontersRow,
 ) -> Result<(), Error> {
-    let guild = client
-        .guild(Id::<GuildMarker>::new(cat.guild_id))
-        .await?
-        .model()
-        .await?;
+    let guild = client.guild(cat.guild_id.0).await?.model().await?;
 
     let cat = client
-        .channel(Id::<ChannelMarker>::new(cat.category_id))
+        .channel(cat.category_id.0)
         .await
         .map_err(|err| {
             format!(

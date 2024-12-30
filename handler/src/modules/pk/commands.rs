@@ -36,8 +36,8 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
 
     db::save_guild_settings(
         &ctx.services.db,
-        guild.id.get(),
-        user_id.get(),
+        guild.id,
+        user_id,
         &system_id,
         token.clone(),
     )

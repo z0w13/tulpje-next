@@ -1,8 +1,15 @@
+use twilight_model::id::{
+    marker::{ChannelMarker, GuildMarker},
+    Id,
+};
+
 use tulpje_framework::Error;
 
+use crate::db::DbId;
+
 pub(crate) struct ModPkFrontersRow {
-    pub(crate) guild_id: u64,
-    pub(crate) category_id: u64,
+    pub(crate) guild_id: DbId<GuildMarker>,
+    pub(crate) category_id: DbId<ChannelMarker>,
 }
 
 pub(crate) async fn get_fronter_categories(
@@ -17,19 +24,19 @@ pub(crate) async fn get_fronter_categories(
     Ok(result
         .into_iter()
         .map(|row| ModPkFrontersRow {
-            guild_id: row.guild_id.try_into().unwrap(),
-            category_id: row.category_id.try_into().unwrap(),
+            guild_id: DbId::from(row.guild_id),
+            category_id: DbId::from(row.category_id),
         })
         .collect())
 }
 
 pub(crate) async fn get_fronter_category(
     db: &sqlx::PgPool,
-    guild_id: u64,
+    guild_id: Id<GuildMarker>,
 ) -> Result<Option<u64>, Error> {
     let result = sqlx::query_scalar!(
         "SELECT category_id FROM pk_fronters WHERE guild_id = $1",
-        i64::try_from(guild_id)?,
+        i64::from(DbId(guild_id)),
     )
     .fetch_optional(db)
     .await?;
@@ -42,13 +49,13 @@ pub(crate) async fn get_fronter_category(
 
 pub(crate) async fn save_fronter_category(
     db: &sqlx::PgPool,
-    guild_id: u64,
-    channel_id: u64,
+    guild_id: Id<GuildMarker>,
+    channel_id: Id<ChannelMarker>,
 ) -> Result<(), Error> {
     sqlx::query!(
         "INSERT INTO pk_fronters (guild_id, category_id) VALUES ($1, $2) ON CONFLICT (guild_id) DO UPDATE SET category_id = $2",
-        i64::try_from(guild_id)?,
-        i64::try_from(channel_id)?,
+        i64::from(DbId(guild_id)),
+        i64::from(DbId(channel_id)),
     )
     .execute(db)
     .await?;

@@ -1,5 +1,6 @@
 mod config;
 mod context;
+mod db;
 mod modules;
 
 use std::{sync::Arc, time::Duration};

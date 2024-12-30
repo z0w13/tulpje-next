@@ -1,10 +1,10 @@
 use base64::{prelude::BASE64_STANDARD, Engine as _};
 use futures::StreamExt;
 use twilight_http::Client;
-use twilight_model::id::marker::GuildMarker;
-use twilight_model::id::Id;
 
 use tulpje_framework::Error;
+use twilight_model::id::marker::{EmojiMarker, GuildMarker};
+use twilight_model::id::Id;
 
 use crate::context::CommandContext;
 use crate::modules::emoji::db::Emoji;
@@ -16,7 +16,10 @@ pub(crate) async fn command(ctx: CommandContext) -> Result<(), Error> {
         unreachable!("command is guild_only");
     };
 
-    let emojis = parse_emojis_from_string(1, &ctx.get_arg_string("emoji")?);
+    let emojis = parse_emojis_from_string(
+        Id::<GuildMarker>::new(0), /* DUMMY */
+        &ctx.get_arg_string("emoji")?,
+    );
     if emojis.is_empty() {
         ctx.reply("no emojis found").await?;
         return Ok(());
@@ -105,7 +108,7 @@ pub(crate) async fn command(ctx: CommandContext) -> Result<(), Error> {
     Ok(())
 }
 
-async fn download_emoji(id: u64, animated: bool) -> Result<String, reqwest::Error> {
+async fn download_emoji(id: Id<EmojiMarker>, animated: bool) -> Result<String, reqwest::Error> {
     reqwest::get(format!(
         "https://cdn.discordapp.com/emojis/{}.{}",
         id,
@@ -137,7 +140,7 @@ async fn clone_emoji(
     emoji: &Emoji,
     new_name: &str,
 ) -> Result<Emoji, EmojiError> {
-    let emoji_data_uri = download_emoji(emoji.id, emoji.animated)
+    let emoji_data_uri = download_emoji(*emoji.id, emoji.animated)
         .await
         .map_err(|err| EmojiError::Download(emoji.clone(), err))?;
 
@@ -149,7 +152,7 @@ async fn clone_emoji(
         .await
         .map_err(|e| EmojiError::Other(emoji.clone(), e.into()))?;
 
-    Ok(Emoji::from_twilight(new_emoji, guild_id.get()))
+    Ok(Emoji::from_twilight(new_emoji, guild_id))
 }
 
 pub(crate) enum EmojiError {

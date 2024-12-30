@@ -33,12 +33,12 @@ pub async fn handle_message(ctx: EventContext) -> Result<(), Error> {
     }
 
     let timestamp = chrono::Utc::now();
-    let emotes = shared::parse_emojis_from_string(guild_id.get(), &msg.content);
+    let emotes = shared::parse_emojis_from_string(guild_id, &msg.content);
 
     trace!(message = msg.content, emotes = ?emotes, "message");
 
     for emote in emotes.into_iter() {
-        if shared::is_guild_emoji(&ctx.client, guild_id, Id::<EmojiMarker>::new(emote.id)).await {
+        if shared::is_guild_emoji(&ctx.client, guild_id, *emote.id).await {
             if let Err(err) = db::save_emoji_use(&ctx.services.db, &emote, timestamp).await {
                 error!(err, guild_id = guild_id.get(), "db::save_emoji_use");
             };
@@ -79,14 +79,14 @@ pub async fn message_update(ctx: EventContext) -> Result<(), Error> {
         return Ok(());
     };
 
-    let guild_emojis: HashSet<u64> = ctx
+    let guild_emojis: HashSet<Id<EmojiMarker>> = ctx
         .client
         .emojis(guild_id)
         .await?
         .model()
         .await?
         .into_iter()
-        .map(|e| e.id.get())
+        .map(|e| e.id)
         .collect();
 
     let timestamp = evt
@@ -97,14 +97,14 @@ pub async fn message_update(ctx: EventContext) -> Result<(), Error> {
     // TODO: Once we implement cache compare the messages
     //       currently every edit considers every emoji a new one
     let old_emote_count = shared::count_emojis(
-        shared::parse_emojis_from_string(guild_id.get(), /* &old_message.content */ "")
+        shared::parse_emojis_from_string(guild_id, /* &old_message.content */ "")
             .into_iter()
             .filter(|e| guild_emojis.contains(&e.id))
             .collect::<Vec<db::Emoji>>(),
     );
 
     let new_emote_count = shared::count_emojis(
-        shared::parse_emojis_from_string(guild_id.get(), new_content)
+        shared::parse_emojis_from_string(guild_id, new_content)
             .into_iter()
             .filter(|e| guild_emojis.contains(&e.id))
             .collect::<Vec<db::Emoji>>(),
@@ -155,12 +155,7 @@ pub async fn reaction_add(ctx: EventContext) -> Result<(), Error> {
                 return Ok(());
             }
 
-            let emote = db::Emoji {
-                id: id.get(),
-                guild_id: guild_id.get(),
-                name: name.into(),
-                animated: *animated,
-            };
+            let emote = db::Emoji::new(*id, guild_id, name.clone(), *animated);
 
             if let Err(err) = db::save_emoji_use(&ctx.services.db, &emote, now).await {
                 error!(err, "db::save_emoji_use");

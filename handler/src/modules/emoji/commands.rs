@@ -43,7 +43,7 @@ async fn create_emoji_stats_embed(
     guild: &Guild,
     sort: &StatsSort,
 ) -> Result<Embed, Error> {
-    let emoji_stats = db::get_emoji_stats(db, guild.id.get(), sort).await?;
+    let emoji_stats = db::get_emoji_stats(db, guild.id, sort).await?;
     let emoji_str = if !emoji_stats.is_empty() {
         emoji_stats
             .into_iter()

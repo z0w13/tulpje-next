@@ -1,7 +1,13 @@
 use sqlx::types::chrono;
+
 use tulpje_framework::Error;
+use twilight_model::id::{
+    marker::{EmojiMarker, GuildMarker},
+    Id,
+};
 
 use super::shared::StatsSort;
+use crate::db::DbId;
 
 #[derive(Debug)]
 // allowed because this is the actual database structure
@@ -9,8 +15,8 @@ use super::shared::StatsSort;
 #[allow(dead_code)]
 pub(crate) struct EmojiUse {
     pub(crate) id: i64,
-    pub(crate) guild_id: i64,
-    pub(crate) emoji_id: i64,
+    pub(crate) guild_id: DbId<GuildMarker>,
+    pub(crate) emoji_id: DbId<EmojiMarker>,
     pub(crate) name: String,
     pub(crate) animated: bool,
     pub(crate) created_at: chrono::NaiveDateTime,
@@ -26,14 +32,35 @@ pub(crate) struct EmojiStats {
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub(crate) struct Emoji {
-    #[sqlx(try_from = "i64")]
     #[sqlx(rename = "emoji_id")]
-    pub(crate) id: u64,
+    pub(crate) id: DbId<EmojiMarker>,
     #[allow(dead_code)]
-    #[sqlx(try_from = "i64")]
-    pub(crate) guild_id: u64,
+    pub(crate) guild_id: DbId<GuildMarker>,
     pub(crate) name: String,
     pub(crate) animated: bool,
+}
+
+impl Emoji {
+    pub(crate) fn new(
+        id: Id<EmojiMarker>,
+        guild_id: Id<GuildMarker>,
+        name: String,
+        animated: bool,
+    ) -> Self {
+        Self {
+            id: DbId(id),
+            guild_id: DbId(guild_id),
+            name,
+            animated,
+        }
+    }
+
+    pub(crate) fn from_twilight(
+        val: twilight_model::guild::Emoji,
+        guild_id: Id<GuildMarker>,
+    ) -> Self {
+        Self::new(val.id, guild_id, val.name, val.animated)
+    }
 }
 
 impl std::fmt::Display for Emoji {
@@ -48,17 +75,6 @@ impl std::fmt::Display for Emoji {
             self.name,
             self.id
         )
-    }
-}
-
-impl Emoji {
-    pub(crate) fn from_twilight(val: twilight_model::guild::Emoji, guild_id: u64) -> Self {
-        Emoji {
-            id: val.id.get(),
-            guild_id,
-            name: val.name,
-            animated: val.animated,
-        }
     }
 }
 
@@ -91,8 +107,8 @@ pub(crate) async fn save_emoji_use(
                 created_at
             ) VALUES ($1, $2, $3, $4, $5)
         ",
-        i64::try_from(emote.guild_id)?,
-        i64::try_from(emote.id)?,
+        i64::from(emote.guild_id),
+        i64::from(emote.id),
         emote.name,
         emote.animated,
         timestamp.naive_utc(),
@@ -105,7 +121,7 @@ pub(crate) async fn save_emoji_use(
 
 pub(crate) async fn get_emoji_stats(
     db: &sqlx::PgPool,
-    guild_id: u64,
+    guild_id: Id<GuildMarker>,
     sort: &StatsSort,
 ) -> Result<Vec<EmojiStats>, Error> {
     let order_by_clause = match sort {
@@ -131,7 +147,7 @@ pub(crate) async fn get_emoji_stats(
         ",
         order_by_clause
     ))
-    .bind(i64::try_from(guild_id)?)
+    .bind(DbId(guild_id))
     .fetch_all(db)
     .await?;
 
