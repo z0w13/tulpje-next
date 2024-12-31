@@ -5,7 +5,7 @@ use futures_util::StreamExt;
 use twilight_gateway::EventTypeFlags;
 use twilight_model::gateway::{
     event::{Event, GatewayEventDeserializer},
-    payload::outgoing::update_presence::UpdatePresencePayload,
+    payload::outgoing::{identify::IdentifyProperties, update_presence::UpdatePresencePayload},
     presence::{Activity, MinimalActivity, Status},
     OpCode,
 };
@@ -70,6 +70,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         twilight_gateway::Intents::all(),
     )
     .presence(create_presence())
+    .identify_properties(IdentifyProperties {
+        browser: "tulpje".into(),
+        device: "tulpje".into(),
+        os: std::env::consts::OS.into(),
+    })
     .build();
     let shard_id = twilight_gateway::ShardId::new_checked(config.shard_id, config.shard_count)
         .expect("error constructing shard ID");
