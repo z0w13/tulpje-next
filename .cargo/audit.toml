@@ -1,0 +1,8 @@
+[advisories]
+ignore = [
+    # security issue in rsa crate, we don't depend on it but due to a bug
+    # with optional depenendencies it gets pulled in by sqlx, see:
+    #  https://github.com/launchbadge/sqlx/issues/2911
+    #  https://github.com/rust-lang/cargo/issues/10801
+    "RUSTSEC-2023-0071"
+]
