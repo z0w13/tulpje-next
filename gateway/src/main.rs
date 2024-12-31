@@ -13,6 +13,7 @@ use twilight_model::gateway::{
 
 use tulpje_shared::DiscordEvent;
 
+mod amqp;
 #[cfg(feature = "cache")]
 mod cache;
 mod config;
@@ -50,30 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // set-up logging
     tracing_subscriber::fmt::init();
 
-    // create the rabbitmq connection
-    let rabbitmq_options = lapin::ConnectionProperties::default()
-        .with_executor(tokio_executor_trait::Tokio::current())
-        .with_reactor(tokio_reactor_trait::Tokio);
-    let rabbitmq_conn = lapin::Connection::connect(&config.rabbitmq_address, rabbitmq_options)
-        .await
-        .expect("couldn't connec to RabbitMQ");
-    let rabbitmq_chan = rabbitmq_conn
-        .create_channel()
-        .await
-        .expect("couldn't create RabbitMQ channel");
-
-    // declare the queue
-    rabbitmq_chan
-        .queue_declare(
-            "discord",
-            lapin::options::QueueDeclareOptions {
-                durable: true,
-                ..Default::default()
-            },
-            lapin::types::FieldTable::default(),
-        )
-        .await
-        .expect("couldn't declare queue");
+    let amqp = amqp::create(&config.rabbitmq_address).await;
 
     // create the redis connection
     let manager = RedisConnectionManager::new(config.redis_url).expect("error initialising redis");
@@ -171,15 +149,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 if opcode == OpCode::Dispatch {
                     let event = DiscordEvent::new(shard_id.number(), text);
 
-                    rabbitmq_chan
-                        .basic_publish(
-                            "",
-                            "discord",
-                            lapin::options::BasicPublishOptions::default(),
-                            &serde_json::to_vec(&event)?,
-                            lapin::BasicProperties::default(),
-                        )
-                        .await?;
+                    amqp.send(&serde_json::to_vec(&event)?).await?;
 
                     tracing::debug!(
                         uuid = ?event.meta.uuid,

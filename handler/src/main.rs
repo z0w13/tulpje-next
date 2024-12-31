@@ -1,3 +1,4 @@
+mod amqp;
 mod config;
 mod context;
 mod db;
@@ -7,7 +8,6 @@ use std::{sync::Arc, time::Duration};
 
 use bb8_redis::RedisConnectionManager;
 use context::Services;
-use futures::StreamExt;
 use sqlx::{
     postgres::{PgConnectOptions, PgPoolOptions},
     ConnectOptions,
@@ -41,39 +41,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .ratelimiter(None)
         .build();
 
-    let rabbitmq_options = lapin::ConnectionProperties::default()
-        .with_executor(tokio_executor_trait::Tokio::current())
-        .with_reactor(tokio_reactor_trait::Tokio);
-    let rabbitmq_conn =
-        lapin::Connection::connect(&config.rabbitmq_address, rabbitmq_options).await?;
-    let rabbitmq_chan = rabbitmq_conn
-        .create_channel()
-        .await
-        .expect("couldn't create RabbitMQ channel");
-    // declare the queue
-    rabbitmq_chan
-        .queue_declare(
-            "discord",
-            lapin::options::QueueDeclareOptions {
-                durable: true,
-                ..Default::default()
-            },
-            lapin::types::FieldTable::default(),
-        )
-        .await
-        .expect("couldn't declare queue");
-    let mut rabbitmq_consumer = rabbitmq_chan
-        .basic_consume(
-            "discord",
-            "handler",
-            lapin::options::BasicConsumeOptions {
-                no_ack: true,
-                ..Default::default()
-            },
-            lapin::types::FieldTable::default(),
-        )
-        .await?;
-
     // create the redis connection
     let manager = RedisConnectionManager::new(config.redis_url).expect("error initialising redis");
     let redis = bb8::Pool::builder()
@@ -93,6 +60,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .connect_with(connect_opts)
         .await
         .expect("error connecting to db");
+
+    // create AMQP connection
+    let mut amqp = amqp::create(&config.rabbitmq_address).await;
 
     tracing::info!("running migrations...");
     sqlx::migrate!("../migrations")
@@ -126,11 +96,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let main_handle = tokio::spawn(async move {
         loop {
-            let Some(delivery) = rabbitmq_consumer.next().await else {
+            let Some(message) = amqp.recv().await else {
                 break;
             };
 
-            let (meta, event) = match parse_delivery(delivery) {
+            let (meta, event) = match parse_delivery(message) {
                 Ok((meta, event)) => (meta, event),
                 Err(err) => {
                     tracing::error!(?err, "couldn't parse delivery");
@@ -155,11 +125,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn parse_delivery(
-    delivery: Result<lapin::message::Delivery, lapin::Error>,
+    message: Vec<u8>,
 ) -> Result<(DiscordEventMeta, twilight_model::gateway::event::Event), Box<dyn std::error::Error>> {
-    let message = delivery?;
-
-    let discord_event = serde_json::from_str::<DiscordEvent>(&String::from_utf8(message.data)?)?;
+    let discord_event = serde_json::from_str::<DiscordEvent>(&String::from_utf8(message)?)?;
 
     Ok((
         discord_event.meta,

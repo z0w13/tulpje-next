@@ -3,15 +3,19 @@ name = "tulpje-handler"
 edition = "2021"
 version.workspace = true
 
+[features]
+default = ["amqp-amqprs"]
+
+amqp-lapin = ["dep:lapin", "dep:tokio-executor-trait", "dep:tokio-reactor-trait"]
+amqp-amqprs = ["dep:amqprs"]
+
 [dependencies]
 tulpje-shared = { path = "../shared" }
 tulpje-framework = { path = "../framework" }
 futures = "0.3.31"
-lapin = "2.5.0"
+
 serde_json = "1.0.133"
-tokio = { version = "1.42.0", features = ["rt-multi-thread", "macros"] }
-tokio-executor-trait = "2.1.3"
-tokio-reactor-trait = "1.1.0"
+tokio = { version = "1.42.0", features = ["rt-multi-thread", "macros", "sync"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 twilight-gateway = "0.16.0-rc.1"
@@ -33,6 +37,15 @@ base64 = "0.22.1"
 async-cron-scheduler = { version = "2.0.1", features = ["logging"] }
 pkrs = { git = "https://github.com/z0w13/pkrs.git", version = "0.4.0", default-features = false, features = ["reqwest-client", "rustls-tls"] }
 serde_either = "0.2.1"
+async-trait = "0.1.83"
+
+# amqp-amqprs
+amqprs = { version = "2.1.0", features = ["compliance_assert", "traces", "urispec"], optional = true }
+
+# amqp-lapin
+lapin = { version = "2.5.0", optional = true }
+tokio-executor-trait = { version = "2.1.3", optional = true }
+tokio-reactor-trait = { version = "1.1.0", optional = true }
 
 [build-dependencies]
 vergen-gitcl = { version = "1.0.2", features = ["build"] }
