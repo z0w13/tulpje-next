@@ -4,5 +4,8 @@ ignore = [
     # with optional depenendencies it gets pulled in by sqlx, see:
     #  https://github.com/launchbadge/sqlx/issues/2911
     #  https://github.com/rust-lang/cargo/issues/10801
-    "RUSTSEC-2023-0071"
+    "RUSTSEC-2023-0071",
+    # 'instant' is unmaintained but a deep dependency, and a warning at best
+    # not really something to be concerned about
+    "RUSTSEC-2024-0384",
 ]
