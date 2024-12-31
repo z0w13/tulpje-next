@@ -4,9 +4,8 @@ use bb8_redis::RedisConnectionManager;
 use futures_util::StreamExt;
 use twilight_gateway::EventTypeFlags;
 use twilight_model::gateway::{
-    event::Event,
-    event::GatewayEventDeserializer,
-    payload::outgoing::UpdatePresence,
+    event::{Event, GatewayEventDeserializer},
+    payload::outgoing::update_presence::UpdatePresencePayload,
     presence::{Activity, MinimalActivity, Status},
     OpCode,
 };
@@ -66,8 +65,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // create the shard
     tracing::info!("shard: {}, total: {}", config.shard_id, config.shard_count);
-    let shard_config =
-        twilight_gateway::Config::new(config.discord_token, twilight_gateway::Intents::all());
+    let shard_config = twilight_gateway::ConfigBuilder::new(
+        config.discord_token,
+        twilight_gateway::Intents::all(),
+    )
+    .presence(create_presence())
+    .build();
     let shard_id = twilight_gateway::ShardId::new_checked(config.shard_id, config.shard_count)
         .expect("error constructing shard ID");
     let mut shard = twilight_gateway::Shard::with_config(shard_id, shard_config);
@@ -81,7 +84,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // start main loop
     tracing::info!("starting main loop...");
-    let init_done = std::sync::atomic::AtomicBool::new(false);
     loop {
         match shard.next().await {
             Some(Ok(twilight_gateway::Message::Close(frame))) => {
@@ -126,23 +128,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     {
                         tracing::error!("error updating shard state: {}", err);
                     }
-
-                    #[expect(clippy::single_match, reason = "this might be expanded in the future")]
-                    match event.into() {
-                        Event::Ready(_bot_info) => {
-                            // we only run global init code on the first shard
-                            if shard_id.number() == 0 {
-                                if !init_done.swap(true, std::sync::atomic::Ordering::SeqCst) {
-                                    handle_first_ready(&mut shard).await
-                                } else {
-                                    tracing::warn!(
-                                        "Event::Ready fired a second time on first shard"
-                                    );
-                                }
-                            }
-                        }
-                        _ => {}
-                    }
                 }
 
                 // only publish non-gateway events, aka everything DISPATCH
@@ -168,40 +153,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
-async fn set_presence(
-    shard: &mut twilight_gateway::Shard,
-    state: String,
-    status: Status,
-) -> Result<(), Box<dyn Error>> {
-    let mut activity: Activity = MinimalActivity {
-        kind: twilight_model::gateway::presence::ActivityType::Custom,
-        name: "~".into(),
-        url: None,
-    }
-    .into();
-    activity.state = Some(state);
-
-    shard.send(serde_json::to_string(&UpdatePresence::new(
-        vec![activity],
-        false,
-        None,
-        status,
-    )?)?);
-
-    Ok(())
-}
-
-fn parse_opcode(event: &str) -> Result<Option<OpCode>, Box<dyn Error>> {
-    let Some(gateway_deserializer) = GatewayEventDeserializer::from_json(event) else {
-        return Err("couldn't deserialise event".into());
-    };
-
-    Ok(OpCode::from(gateway_deserializer.op()))
-}
-
-async fn handle_first_ready(shard: &mut twilight_gateway::Shard) {
-    tracing::debug!("setting presence");
-
+fn create_presence() -> UpdatePresencePayload {
     let state = format!(
         " Version: {} ({}{})",
         env!("CARGO_PKG_VERSION"),
@@ -212,7 +164,22 @@ async fn handle_first_ready(shard: &mut twilight_gateway::Shard) {
         }
     );
 
-    if let Err(err) = set_presence(shard, state, Status::Online).await {
-        tracing::error!(?err, "error setting presence");
+    let mut activity: Activity = MinimalActivity {
+        kind: twilight_model::gateway::presence::ActivityType::Custom,
+        name: "~".into(),
+        url: None,
     }
+    .into();
+    activity.state = Some(state);
+
+    UpdatePresencePayload::new(vec![activity], false, None, Status::Online)
+        .expect("couldn't create UpdatePresence struct")
+}
+
+fn parse_opcode(event: &str) -> Result<Option<OpCode>, Box<dyn Error>> {
+    let Some(gateway_deserializer) = GatewayEventDeserializer::from_json(event) else {
+        return Err("couldn't deserialise event".into());
+    };
+
+    Ok(OpCode::from(gateway_deserializer.op()))
 }
