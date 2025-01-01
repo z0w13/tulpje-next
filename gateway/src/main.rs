@@ -16,6 +16,7 @@ mod amqp;
 #[cfg(feature = "cache")]
 mod cache;
 mod config;
+mod metrics;
 mod shard_state;
 
 use config::Config;
@@ -49,6 +50,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // set-up logging
     tracing_subscriber::fmt::init();
+
+    // set-up metrics
+    tracing::info!("installing metrics collector and exporter...");
+    metrics::install(config.shard_id).expect("error setting up metrics");
 
     let amqp = amqp::create(&config.rabbitmq_address).await;
 
@@ -118,17 +123,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 tracing::debug!(?opcode, "opcode received");
 
-                if let Ok(Some(event)) = twilight_gateway::parse(
-                    text.clone(),
-                    EventTypeFlags::GATEWAY_HEARTBEAT_ACK
-                        | EventTypeFlags::GATEWAY_HELLO
-                        | EventTypeFlags::GUILD_CREATE
-                        | EventTypeFlags::GUILD_DELETE
-                        | EventTypeFlags::RESUMED
-                        | EventTypeFlags::READY,
-                ) {
+                if let Ok(Some(event)) =
+                    twilight_gateway::parse(text.clone(), EventTypeFlags::all())
+                {
+                    let event = twilight_model::gateway::event::Event::from(event);
+
+                    // track event metrics
+                    metrics::track_gateway_event(shard_id.number(), &event);
+
                     if let Err(err) = shard_state_manager
-                        .handle_event(event.clone().into(), shard.latency())
+                        .handle_event(event.clone(), shard.latency())
                         .await
                     {
                         tracing::error!("error updating shard state: {}", err);
@@ -138,8 +142,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 // only publish non-gateway events, aka everything DISPATCH
                 if opcode == OpCode::Dispatch {
                     let event = DiscordEvent::new(shard_id.number(), text);
+                    let serialized_event = match serde_json::to_vec(&event) {
+                        Ok(val) => val,
+                        Err(err) => {
+                            tracing::error!("error serializing event: {}", err);
+                            continue;
+                        }
+                    };
 
-                    amqp.send(&serde_json::to_vec(&event)?).await?;
+                    if let Err(err) = amqp.send(&serialized_event).await {
+                        tracing::error!("error sending event to amqp: {}", err);
+                        continue;
+                    }
 
                     tracing::debug!(
                         uuid = ?event.meta.uuid,

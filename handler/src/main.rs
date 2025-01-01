@@ -2,6 +2,7 @@ mod amqp;
 mod config;
 mod context;
 mod db;
+mod metrics;
 mod modules;
 
 use std::{sync::Arc, time::Duration};
@@ -34,6 +35,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // set-up logging
     tracing_subscriber::fmt::init();
+
+    // set-up metrics
+    tracing::info!("installing metrics collector and exporter...");
+    metrics::install().expect("error setting up metrics");
 
     // needed for fetching recommended shard count
     let client = twilight_http::Client::builder()

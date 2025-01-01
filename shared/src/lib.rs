@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use twilight_model::id::{marker::ApplicationMarker, Id};
 
 pub mod color;
+pub mod metrics;
 pub mod shard_state;
 
 #[derive(Serialize, Deserialize, Debug)]

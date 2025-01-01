@@ -4,6 +4,10 @@ edition = "2021"
 version.workspace = true
 
 [dependencies]
+metrics = "0.24.1"
+metrics-exporter-prometheus = "0.16.0"
+metrics-process = "2.4.0"
 serde = { version = "1.0.216", features = ["derive"] }
+tokio = "1.42.0"
 twilight-model = "0.16.0-rc.1"
 uuid = { version = "1.11.0", features = ["v7", "serde"] }
