@@ -1,4 +1,4 @@
-use futures::StreamExt;
+use futures_util::StreamExt;
 use lapin::{
     options::{BasicConsumeOptions, QueueDeclareOptions},
     types::FieldTable,

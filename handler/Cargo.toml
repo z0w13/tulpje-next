@@ -12,8 +12,7 @@ amqp-amqprs = ["dep:amqprs"]
 [dependencies]
 tulpje-shared = { path = "../shared" }
 tulpje-framework = { path = "../framework" }
-futures = "0.3.31"
-
+futures-util = "0.3.31"
 serde_json = "1.0.133"
 tokio = { version = "1.42.0", features = ["rt-multi-thread", "macros", "sync"] }
 tracing = "0.1.41"

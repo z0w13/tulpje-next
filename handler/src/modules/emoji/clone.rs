@@ -1,5 +1,5 @@
 use base64::{prelude::BASE64_STANDARD, Engine as _};
-use futures::StreamExt;
+use futures_util::StreamExt;
 use twilight_http::Client;
 
 use tulpje_framework::Error;
@@ -58,7 +58,7 @@ pub(crate) async fn command(ctx: CommandContext) -> Result<(), Error> {
 
         // what a fucken mess to have async map, but it works :)
         let emoji_results: Vec<Result<Emoji, EmojiError>> =
-            futures::stream::iter(
+            futures_util::stream::iter(
                 emojis.into_iter().map(|e| {
                     let prefix = prefix.clone();
                     let client = ctx.client.clone();

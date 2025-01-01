@@ -119,7 +119,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    futures::future::join_all([main_handle, sched_handle]).await;
+    futures_util::future::join_all([main_handle, sched_handle]).await;
 
     Ok(())
 }
