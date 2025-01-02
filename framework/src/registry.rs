@@ -101,14 +101,11 @@ impl<T: Clone + Send + Sync + 'static> TaskService<T> {
     }
 
     pub async fn insert(&mut self, handler: TaskHandler<T>) {
+        if self.scheduler.is_some() {
+            panic!("trying to insert a task while scheduler is already running");
+        }
+
         self.handlers.insert(handler.name.clone(), handler.clone());
-
-        let Some(ref mut scheduler) = self.scheduler else {
-            return;
-        };
-
-        let job_id = insert_job(scheduler, handler.clone(), self.ctx.clone()).await;
-        self.job_map.insert(handler.name.clone(), job_id);
     }
 
     pub async fn remove(&mut self, name: &str) -> bool {
