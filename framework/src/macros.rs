@@ -16,6 +16,16 @@ macro_rules! command {
 }
 
 #[macro_export]
+macro_rules! guild_command {
+    ($reg:expr, $group:expr, $def:expr, $func:expr $(,)?) => {
+        $reg.guild_command.insert($group.into(), CommandHandler {
+            definition: $def,
+            func: |ctx| Box::pin($func(ctx)),
+        });
+    };
+}
+
+#[macro_export]
 macro_rules! event_handler {
     ($reg:expr, $event:expr, $func:expr $(,)?) => {
         $reg.event.insert(EventHandler {

@@ -159,8 +159,54 @@ async fn insert_job<T: Clone + Send + Sync + 'static>(
         .await
 }
 
+pub struct GuildCommandRegistry<T: Clone + Send + Sync> {
+    pub groups: HashMap<String, InteractionRegistry<String, CommandHandler<T>>>,
+}
+
+impl<T: Clone + Send + Sync + 'static> GuildCommandRegistry<T> {
+    #[expect(
+        clippy::new_without_default,
+        reason = "we might have constructor arguments in the future, having a Default implementation feels incorrect"
+    )]
+    pub fn new() -> Self {
+        Self {
+            groups: HashMap::new(),
+        }
+    }
+
+    pub fn insert(&mut self, group: String, handler: CommandHandler<T>) {
+        if !self.groups.contains_key(&group) {
+            self.groups
+                .insert(group.clone(), InteractionRegistry::new());
+        }
+
+        self.groups.get_mut(&group).unwrap().insert(handler);
+    }
+
+    pub fn get_group(&self, key: &String) -> Option<Vec<&CommandHandler<T>>> {
+        self.groups.get(key).map(|v| v.values().collect())
+    }
+
+    pub fn find_command(&self, name: &String) -> Option<&CommandHandler<T>> {
+        self.groups.values().find_map(|r| r.get(name))
+    }
+
+    pub fn get_definitions(&self) -> HashMap<String, Vec<Command>> {
+        self.groups
+            .iter()
+            .map(|(k, v)| {
+                (
+                    k.clone(),
+                    v.values().map(|v| v.definition.clone()).collect(),
+                )
+            })
+            .collect()
+    }
+}
+
 pub struct Registry<T: Clone + Send + Sync> {
     pub command: InteractionRegistry<String, CommandHandler<T>>,
+    pub guild_command: GuildCommandRegistry<T>,
     pub component_interaction: InteractionRegistry<String, ComponentInteractionHandler<T>>,
     pub event: EventRegistry<T>,
     pub task: TaskService<T>,
@@ -176,11 +222,20 @@ impl<T: Clone + Send + Sync + 'static> Registry<T> {
     pub fn new() -> Self {
         Self {
             command: InteractionRegistry::<String, CommandHandler<T>>::new(),
+            guild_command: GuildCommandRegistry::new(),
             component_interaction:
                 InteractionRegistry::<String, ComponentInteractionHandler<T>>::new(),
             event: EventRegistry::<T>::new(),
             task: TaskService::<T>::new(),
         }
+    }
+
+    pub fn find_command(&self, name: &String) -> Option<&CommandHandler<T>> {
+        if let Some(command) = self.command.get(name) {
+            return Some(command);
+        }
+
+        self.guild_command.find_command(name)
     }
 
     pub fn get_global_commands(&self) -> Vec<Command> {

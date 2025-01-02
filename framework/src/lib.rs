@@ -12,7 +12,7 @@ pub mod registry;
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
-pub async fn handle_interaction<T: Clone + Send + Sync>(
+pub async fn handle_interaction<T: Clone + Send + Sync + 'static>(
     event: InteractionCreate,
     context: Context<T>,
     meta: &DiscordEventMeta,
@@ -22,7 +22,7 @@ pub async fn handle_interaction<T: Clone + Send + Sync>(
 
     match interaction::parse(event.clone(), meta.clone(), context) {
         Ok(InteractionContext::Command(ctx)) => {
-            let Some(command) = registry.command.get(&ctx.command.name) else {
+            let Some(command) = registry.find_command(&ctx.command.name) else {
                 return Err(format!("unknown command /{}", ctx.command.name).into());
             };
 
@@ -59,7 +59,7 @@ pub async fn handle_interaction<T: Clone + Send + Sync>(
     Ok(())
 }
 
-pub async fn handle<T: Clone + Send + Sync>(
+pub async fn handle<T: Clone + Send + Sync + 'static>(
     meta: DiscordEventMeta,
     ctx: Context<T>,
     registry: &mut Registry<T>,

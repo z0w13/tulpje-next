@@ -1,7 +1,7 @@
 use tulpje_framework::handler::command_handler::CommandHandler;
 use tulpje_framework::registry::Registry;
-use tulpje_framework::task;
-use tulpje_framework::{command, handler::task_handler::TaskHandler};
+use tulpje_framework::{guild_command, task};
+use tulpje_framework::handler::task_handler::TaskHandler;
 use twilight_model::{application::command::CommandType, guild::Permissions};
 use twilight_util::builder::command::{CommandBuilder, StringBuilder};
 
@@ -14,8 +14,9 @@ pub mod roles;
 pub mod util;
 
 pub async fn setup(registry: &mut Registry<Services>) {
-    command!(
+    guild_command!(
         registry,
+        "pluralkit",
         CommandBuilder::new(
             "setup-pk",
             "set-up the PluralKit module",
@@ -32,8 +33,9 @@ pub async fn setup(registry: &mut Registry<Services>) {
         .build(),
         commands::setup_pk
     );
-    command!(
+    guild_command!(
         registry,
+        "pluralkit",
         CommandBuilder::new(
             "setup-fronters",
             "set-up fronter channels",
@@ -45,8 +47,9 @@ pub async fn setup(registry: &mut Registry<Services>) {
         .build(),
         fronters::commands::setup_fronters
     );
-    command!(
+    guild_command!(
         registry,
+        "pluralkit",
         CommandBuilder::new(
             "update-fronters",
             "manually update fronter channels",
@@ -57,8 +60,9 @@ pub async fn setup(registry: &mut Registry<Services>) {
         .build(),
         fronters::commands::update_fronters
     );
-    command!(
+    guild_command!(
         registry,
+        "pluralkit",
         CommandBuilder::new(
             "update-member-roles",
             "update the member roles",

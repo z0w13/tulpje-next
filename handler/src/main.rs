@@ -15,13 +15,13 @@ use sqlx::{
 };
 use tracing::log::LevelFilter;
 
-use tulpje_framework::registry::Registry;
+use tulpje_framework::{registry::Registry, Error};
 use tulpje_shared::{DiscordEvent, DiscordEventMeta};
 
 use config::Config;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Error> {
     // load .env into environment vars, ignore if not found
     match dotenvy::dotenv().map(|_| ()) {
         Err(err) if err.not_found() => {
@@ -75,20 +75,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
         .expect("error running migrations");
 
+    // register interaction handlers
+    tracing::info!("registering handlers");
+    let mut registry = Registry::<Services>::new();
+    modules::core::setup(&mut registry).await;
+    modules::emoji::setup(&mut registry).await;
+    modules::pk::setup(&mut registry).await;
+    modules::stats::setup(&mut registry).await;
+
     // Client interaction client
     let app = client.current_user_application().await?.model().await?;
     let context = context::Context {
         application_id: app.id,
-        services: context::Services { redis, db },
+        services: context::Services {
+            redis,
+            db,
+            guild_commands: registry.guild_command.get_definitions(),
+        },
         client: Arc::new(client),
     };
-
-    // register interaction handlers
-    tracing::info!("registering handlers");
-    let mut registry = Registry::<Services>::new(context.clone());
-    modules::stats::setup(&mut registry).await;
-    modules::emoji::setup(&mut registry).await;
-    modules::pk::setup(&mut registry).await;
 
     // start the task scheduler
     let sched_handle = registry.task.run(context.clone()).await;
@@ -98,6 +103,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .interaction()
         .set_global_commands(&registry.get_global_commands())
         .await?;
+
+    // register guild commands
+    let guild_modules = modules::core::db_all_guild_modules(&context.services.db)
+        .await
+        .expect("error fetching guild modules");
+    for (guild_id, modules) in guild_modules {
+        modules::core::set_guild_commands_for_guild(
+            modules,
+            guild_id,
+            context.interaction(),
+            &context.services.guild_commands,
+        )
+        .await?;
+    }
 
     let main_handle = tokio::spawn(async move {
         loop {
