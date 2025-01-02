@@ -13,8 +13,6 @@ use twilight_model::gateway::{
 use tulpje_shared::DiscordEvent;
 
 mod amqp;
-#[cfg(feature = "cache")]
-mod cache;
 mod config;
 mod metrics;
 mod shard_state;
@@ -56,10 +54,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     metrics::install(config.shard_id).expect("error setting up metrics");
 
     let amqp = amqp::create(&config.rabbitmq_address).await;
-
-    // create the cache
-    #[cfg(feature = "cache")]
-    let cache = redlight::RedisCache::<cache::Config>::new(&config.redis_url).await?;
 
     // create the redis connection
     let manager = RedisConnectionManager::new(config.redis_url).expect("error initialising redis");
