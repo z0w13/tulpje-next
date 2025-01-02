@@ -50,61 +50,56 @@ pub(crate) async fn command(ctx: CommandContext) -> Result<(), Error> {
             .await?;
         return Ok(());
     } else {
-        // add multiple emotes
-        let prefix = ctx.get_arg_string_optional("prefix")?.unwrap_or("".into());
 
         // defer, we might be a while
         ctx.defer().await?;
 
-        // what a fucken mess to have async map, but it works :)
-        let emoji_results: Vec<Result<Emoji, EmojiError>> =
-            futures_util::stream::iter(
-                emojis.into_iter().map(|e| {
-                    let prefix = prefix.clone();
-                    let client = ctx.client.clone();
-
-                    async move {
-                        clone_emoji(&client, guild.id, &e, &format!("{}{}", prefix, e.name)).await
-                    }
-                }),
-            )
-            .buffered(1)
-            .collect()
-            .await;
-
-        let emojis_added: Vec<String> = emoji_results
-            .iter()
-            .filter_map(|r| match r {
-                Ok(emoji) => Some(emoji.to_string()),
-                Err(_) => None,
-            })
-            .collect();
-
-        let emoji_errors: Vec<String> = emoji_results
-            .iter()
-            .filter_map(|r| match r {
-                Ok(_) => None,
-                Err(e) => Some(format!("* {}", e)),
-            })
-            .collect();
-
-        let reply = format!(
-            "{}\n{}",
-            match emojis_added.is_empty() {
-                true => "".into(),
-                false => format!("**Added:** {}", emojis_added.join("")),
-            },
-            match emoji_errors.is_empty() {
-                true => "".into(),
-                false => format!("**Errors:**\n{}", emoji_errors.join("\n")),
-            },
-        );
+        // add multiple emotes
+        let prefix = ctx.get_arg_string_optional("prefix")?;
+        let reply = clone_emojis(&ctx.client(), guild.id, prefix, emojis).await;
 
         if let Err(err) = ctx.update(&reply).await {
             tracing::warn!(?err, "failed to respond to command")
         }
     }
 
+    Ok(())
+}
+
+// requires CREATE_GUILD_EXPRESSIONS permission
+pub(crate) async fn context_command(ctx: CommandContext) -> Result<(), Error> {
+    let Some(guild) = ctx.guild().await? else {
+        unreachable!("command is guild_only");
+    };
+
+    let Some(resolved) = &ctx.command.resolved else {
+        return Err("no resolved data for context command".into());
+    };
+    let Some(message) = resolved.messages.values().next() else {
+        return Err("no message for context command".into());
+    };
+
+    let emojis =
+        parse_emojis_from_string(Id::<GuildMarker>::new(1) /* DUMMY */, &message.content);
+    if emojis.is_empty() {
+        ctx.reply("no emojis found").await?;
+        return Ok(());
+    }
+    if emojis.len() > 10 {
+        ctx.reply("**ERROR:** can't add more than 10 emotes at once")
+            .await?;
+        return Ok(());
+    }
+
+    // defer, we might be a while
+    ctx.defer().await?;
+
+    // add multiple emotes
+    let reply = clone_emojis(&ctx.client(), guild.id, None, emojis).await;
+
+    if let Err(err) = ctx.update(&reply).await {
+        tracing::warn!(?err, "failed to respond to command")
+    }
     Ok(())
 }
 
@@ -132,6 +127,58 @@ async fn download_emoji(id: Id<EmojiMarker>, animated: bool) -> Result<String, r
             BASE64_STANDARD.encode(b),
         )
     })
+}
+
+async fn clone_emojis(
+    client: &Client,
+    guild_id: Id<GuildMarker>,
+    prefix: Option<String>,
+    emojis: Vec<Emoji>,
+) -> String {
+    let prefix = prefix.unwrap_or("".into());
+
+    // what a fucken mess to have async map, but it works :)
+    let emoji_results: Vec<Result<Emoji, EmojiError>> =
+            futures_util::stream::iter(
+                emojis.into_iter().map(|e| {
+                    let prefix = prefix.clone();
+
+                    async move {
+                        clone_emoji(client, guild_id, &e, &format!("{}{}", &prefix, e.name)).await
+                    }
+                }),
+            )
+            .buffered(1)
+            .collect()
+            .await;
+
+    let emojis_added: Vec<String> = emoji_results
+        .iter()
+        .filter_map(|r| match r {
+            Ok(emoji) => Some(emoji.to_string()),
+            Err(_) => None,
+        })
+        .collect();
+
+    let emoji_errors: Vec<String> = emoji_results
+        .iter()
+        .filter_map(|r| match r {
+            Ok(_) => None,
+            Err(e) => Some(format!("* {}", e)),
+        })
+        .collect();
+
+    format!(
+        "{}\n{}",
+        match emojis_added.is_empty() {
+            true => "".into(),
+            false => format!("**Added:** {}", emojis_added.join("")),
+        },
+        match emoji_errors.is_empty() {
+            true => "".into(),
+            false => format!("**Errors:**\n{}", emoji_errors.join("\n")),
+        },
+    )
 }
 
 async fn clone_emoji(
