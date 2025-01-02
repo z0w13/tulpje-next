@@ -57,16 +57,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let amqp = amqp::create(&config.rabbitmq_address).await;
 
+    // create the cache
+    #[cfg(feature = "cache")]
+    let cache = redlight::RedisCache::<cache::Config>::new(&config.redis_url).await?;
+
     // create the redis connection
     let manager = RedisConnectionManager::new(config.redis_url).expect("error initialising redis");
     let redis = bb8::Pool::builder()
         .build(manager)
         .await
         .expect("error initialising redis pool");
-
-    // create the cache
-    #[cfg(feature = "cache")]
-    let cache = redlight::RedisCache::<cache::Config>::new(&config.redis_url).await?;
 
     // create the shard
     tracing::info!("shard: {}, total: {}", config.shard_id, config.shard_count);
