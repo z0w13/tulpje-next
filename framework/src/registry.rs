@@ -42,7 +42,7 @@ impl<K: Eq + Hash, T: InteractionHandler<K>> InteractionRegistry<K, T> {
         self.interactions.remove(&val.key())
     }
 
-    pub fn get(&mut self, key: &K) -> Option<&T> {
+    pub fn get(&self, key: &K) -> Option<&T> {
         self.interactions.get(key)
     }
 }
