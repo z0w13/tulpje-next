@@ -84,16 +84,18 @@ impl<T: Clone> EventRegistry<T> {
 }
 
 pub struct TaskService<T: Clone> {
-    ctx: Context<T>,
     handlers: HashMap<String, TaskHandler<T>>,
     job_map: HashMap<String, JobId>,
     scheduler: Option<Scheduler<Utc>>,
 }
 
 impl<T: Clone + Send + Sync + 'static> TaskService<T> {
-    pub fn new(ctx: Context<T>) -> Self {
+    #[expect(
+        clippy::new_without_default,
+        reason = "we might have constructor arguments in the future, having a Default implementation feels incorrect"
+    )]
+    pub fn new() -> Self {
         Self {
-            ctx,
             handlers: HashMap::new(),
             job_map: HashMap::new(),
             scheduler: None,
@@ -124,11 +126,11 @@ impl<T: Clone + Send + Sync + 'static> TaskService<T> {
         existed
     }
 
-    pub async fn run(&mut self) -> tokio::task::JoinHandle<()> {
+    pub async fn run(&mut self, ctx: Context<T>) -> tokio::task::JoinHandle<()> {
         let (mut scheduler, sched_service) = Scheduler::<Utc>::launch(tokio::time::sleep);
 
         for handler in self.handlers.values() {
-            let job_id = insert_job(&mut scheduler, handler.clone(), self.ctx.clone()).await;
+            let job_id = insert_job(&mut scheduler, handler.clone(), ctx.clone()).await;
             self.job_map.insert(handler.name.clone(), job_id);
         }
 
@@ -167,13 +169,17 @@ pub struct Registry<T: Clone + Send + Sync> {
 }
 
 impl<T: Clone + Send + Sync + 'static> Registry<T> {
-    pub fn new(ctx: Context<T>) -> Self {
+    #[expect(
+        clippy::new_without_default,
+        reason = "we might have constructor arguments in the future, having a Default implementation feels incorrect"
+    )]
+    pub fn new() -> Self {
         Self {
             command: InteractionRegistry::<String, CommandHandler<T>>::new(),
             component_interaction:
                 InteractionRegistry::<String, ComponentInteractionHandler<T>>::new(),
             event: EventRegistry::<T>::new(),
-            task: TaskService::<T>::new(ctx),
+            task: TaskService::<T>::new(),
         }
     }
 

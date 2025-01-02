@@ -91,7 +91,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     modules::pk::setup(&mut registry).await;
 
     // start the task scheduler
-    let sched_handle = registry.task.run().await;
+    let sched_handle = registry.task.run(context.clone()).await;
 
     tracing::info!("registering global commands");
     context
