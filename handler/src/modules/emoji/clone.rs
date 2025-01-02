@@ -17,7 +17,7 @@ pub(crate) async fn command(ctx: CommandContext) -> Result<(), Error> {
     };
 
     let emojis = parse_emojis_from_string(
-        Id::<GuildMarker>::new(0), /* DUMMY */
+        Id::<GuildMarker>::new(1), /* DUMMY */
         &ctx.get_arg_string("emoji")?,
     );
     if emojis.is_empty() {
