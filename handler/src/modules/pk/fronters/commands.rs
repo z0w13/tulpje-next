@@ -71,7 +71,7 @@ async fn get_fronter_category(
         .into_iter()
         .find(|c| {
             c.name
-                .to_owned()
+                .clone()
                 .expect("guild channels have names")
                 .to_lowercase()
                 == cat_name
@@ -98,14 +98,14 @@ pub(crate) async fn update_fronter_channels(
     .await?;
     let current_fronters: HashSet<String> = fronter_channels
         .iter()
-        .map(|c| c.name.to_owned().expect("guild channels have names"))
+        .map(|c| c.name.clone().expect("guild channels have names"))
         .collect();
 
     let mut fronter_channel_map: HashMap<String, Channel> = fronter_channels
         .iter()
         .map(|c| {
             (
-                c.name.to_owned().expect("guild channels have names"),
+                c.name.clone().expect("guild channels have names"),
                 c.to_owned(),
             )
         })
@@ -164,7 +164,7 @@ pub(crate) async fn update_fronter_channels(
             }
         };
 
-        fronter_channel_map.insert(fronter.to_owned(), channel.to_owned());
+        fronter_channel_map.insert(fronter.to_owned(), channel.clone());
     }
     for (name, position) in fronter_pos_map.iter() {
         let channel = fronter_channel_map
@@ -230,7 +230,7 @@ async fn create_or_get_fronter_channel(
     cat_name: String,
 ) -> Result<Channel, Error> {
     if let Some(fronters_category) =
-        get_fronter_category(client, guild, Some(cat_name.to_owned())).await?
+        get_fronter_category(client, guild, Some(cat_name.clone())).await?
     {
         return Ok(fronters_category);
     }

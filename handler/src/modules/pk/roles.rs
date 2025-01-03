@@ -59,7 +59,7 @@ async fn get_desired_roles(
             ),
             color: pk_color_to_discord(m.color),
         })
-        .map(|r| (r.name.to_owned(), r))
+        .map(|r| (r.name.clone(), r))
         .collect();
 
     Ok(roles)

@@ -4,10 +4,7 @@ use pkrs::model::Member;
 use tulpje_shared::color;
 
 pub(crate) fn get_member_name(member: &Member) -> String {
-    member
-        .display_name
-        .to_owned()
-        .unwrap_or(member.name.to_owned())
+    member.display_name.clone().unwrap_or(member.name.clone())
 }
 
 pub(crate) fn pk_color_to_discord(hex: Option<String>) -> u32 {
