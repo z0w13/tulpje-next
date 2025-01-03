@@ -31,11 +31,7 @@ pub async fn setup(registry: &mut Registry<Services>) {
         .dm_permission(false)
         .option(
             StringBuilder::new("module", "The module to enable")
-                .choices(
-                    VALID_MODULES
-                        .iter()
-                        .map(|m| (m.to_string(), m.to_string()))
-                )
+                .choices(VALID_MODULES.iter().map(|m| (m.to_string(), m.to_string())))
                 .required(true)
                 .build()
         )
@@ -53,11 +49,7 @@ pub async fn setup(registry: &mut Registry<Services>) {
         .dm_permission(false)
         .option(
             StringBuilder::new("module", "The module to disable")
-                .choices(
-                    VALID_MODULES
-                        .iter()
-                        .map(|m| (m.to_string(), m.to_string()))
-                )
+                .choices(VALID_MODULES.iter().map(|m| (m.to_string(), m.to_string())))
                 .required(true)
                 .build()
         )

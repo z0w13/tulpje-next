@@ -64,14 +64,10 @@ pub async fn setup(registry: &mut Registry<Services>) {
     );
     command!(
         registry,
-        CommandBuilder::new(
-            "Clone Emojis",
-            "",
-            CommandType::Message
-        )
-        .default_member_permissions(Permissions::MANAGE_GUILD_EXPRESSIONS)
-        .dm_permission(false)
-        .build(),
+        CommandBuilder::new("Clone Emojis", "", CommandType::Message)
+            .default_member_permissions(Permissions::MANAGE_GUILD_EXPRESSIONS)
+            .dm_permission(false)
+            .build(),
         clone::context_command
     );
 

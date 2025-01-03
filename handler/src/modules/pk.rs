@@ -1,7 +1,7 @@
 use tulpje_framework::handler::command_handler::CommandHandler;
+use tulpje_framework::handler::task_handler::TaskHandler;
 use tulpje_framework::registry::Registry;
 use tulpje_framework::{guild_command, task};
-use tulpje_framework::handler::task_handler::TaskHandler;
 use twilight_model::{application::command::CommandType, guild::Permissions};
 use twilight_util::builder::command::{CommandBuilder, StringBuilder};
 

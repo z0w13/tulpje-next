@@ -50,7 +50,6 @@ pub(crate) async fn command(ctx: CommandContext) -> Result<(), Error> {
             .await?;
         return Ok(());
     } else {
-
         // defer, we might be a while
         ctx.defer().await?;
 
