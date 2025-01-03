@@ -64,10 +64,10 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
     // Inform user of success
     let response_text = format!(
         "PluralKit module setup with system: {}",
-        match system.name {
-            Some(system_name) => format!("{} (`{}`)", system_name, system_id),
-            None => format!("`{}`", system_id),
-        }
+        system.name.map_or_else(
+            || format!("`{}`", system_id),
+            |system_name| format!("{} (`{}`)", system_name, system_id)
+        )
     );
 
     ctx.update(response_text).await?;

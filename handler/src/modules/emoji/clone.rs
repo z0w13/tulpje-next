@@ -147,10 +147,7 @@ async fn clone_emojis(
 
     let emojis_added: Vec<String> = emoji_results
         .iter()
-        .filter_map(|r| match r {
-            Ok(emoji) => Some(emoji.to_string()),
-            Err(_) => None,
-        })
+        .filter_map(|r| r.as_ref().ok().map(ToString::to_string))
         .collect();
 
     let emoji_errors: Vec<String> = emoji_results

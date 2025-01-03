@@ -8,14 +8,10 @@ pub(crate) fn get_member_name(member: &Member) -> String {
 }
 
 pub(crate) fn pk_color_to_discord(hex: Option<String>) -> u32 {
-    match hex {
-        Some(hex) => {
-            color::Color::from_str(&hex)
-                .unwrap_or(color::roles::DEFAULT)
-                .0
-        }
-        None => color::roles::DEFAULT.0,
-    }
+    hex.map_or(color::roles::DEFAULT, |hex| {
+        color::Color::from_str(&hex).unwrap_or(color::roles::DEFAULT)
+    })
+    .0
 }
 
 #[cfg(test)]

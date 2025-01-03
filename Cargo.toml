@@ -28,6 +28,9 @@ cast_lossless = "warn"
 cast_precision_loss = "warn"
 # I do like this syntax, but it might be less clear
 if_then_some_else_none = "warn"
+# the suggestions are usually not great, but this does usually indicate we can
+# refactor the code to
+option_if_let_else = "warn"
 
 indexing_slicing = "warn"
 manual_assert = "warn"

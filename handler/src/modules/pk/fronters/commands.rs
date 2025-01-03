@@ -63,7 +63,7 @@ async fn get_fronter_category(
         .unwrap_or("current fronters".into())
         .to_lowercase();
 
-    match client
+    Ok(client
         .guild_channels(guild.id)
         .await?
         .models()
@@ -76,10 +76,7 @@ async fn get_fronter_category(
                 .to_lowercase()
                 == cat_name
                 && c.kind == ChannelType::GuildCategory
-        }) {
-        None => Ok(None),
-        Some(cat) => Ok(Some(cat)),
-    }
+        }))
 }
 
 // TODO: Instrument why this bitch slow, are we even using discord's cache?

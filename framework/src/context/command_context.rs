@@ -128,10 +128,7 @@ impl<T: Clone> CommandContext<T> {
     }
 
     pub fn get_arg_string(&self, name: &str) -> Result<String, Error> {
-        if let Some(value) = self.get_arg_string_optional(name)? {
-            Ok(value)
-        } else {
-            Err(format!("couldn't find command argument {}", name).into())
-        }
+        self.get_arg_string_optional(name)?
+            .ok_or_else(|| format!("couldn't find command argument {}", name).into())
     }
 }
