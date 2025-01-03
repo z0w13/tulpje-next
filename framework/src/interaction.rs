@@ -8,7 +8,7 @@ use crate::context::Context;
 use crate::Error;
 
 pub fn parse<T: Clone>(
-    event: InteractionCreate,
+    event: &InteractionCreate,
     meta: DiscordEventMeta,
     ctx: Context<T>,
 ) -> Result<context::InteractionContext<T>, Error> {
