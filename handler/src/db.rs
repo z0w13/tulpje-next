@@ -53,7 +53,7 @@ impl<T> Decode<'_, Postgres> for DbId<T> {
         value: <Postgres as sqlx::Database>::ValueRef<'_>,
     ) -> Result<Self, sqlx::error::BoxDynError> {
         let decoded: NonZeroI64 = Decode::<Postgres>::decode(value)?;
-        Ok(DbId::<T>(Id::<T>::new(decoded.get() as u64)))
+        Ok(Self(Id::<T>::new(decoded.get() as u64)))
     }
 }
 
@@ -69,7 +69,7 @@ impl<T> From<i64> for DbId<T> {
     }
 }
 impl<T> From<DbId<T>> for i64 {
-    fn from(value: DbId<T>) -> i64 {
-        value.0.get() as i64
+    fn from(value: DbId<T>) -> Self {
+        value.0.get() as Self
     }
 }

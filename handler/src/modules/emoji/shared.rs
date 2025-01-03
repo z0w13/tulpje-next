@@ -54,7 +54,7 @@ impl StatsSort {
 
 impl From<StatsSort> for SelectMenuOption {
     fn from(val: StatsSort) -> Self {
-        SelectMenuOption {
+        Self {
             default: false,
             description: None,
             emoji: None,
