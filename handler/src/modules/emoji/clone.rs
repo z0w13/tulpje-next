@@ -49,17 +49,17 @@ pub(crate) async fn command(ctx: CommandContext) -> Result<(), Error> {
         ctx.reply("**ERROR:** can't add more than 10 emotes at once")
             .await?;
         return Ok(());
-    } else {
-        // defer, we might be a while
-        ctx.defer().await?;
+    }
 
-        // add multiple emotes
-        let prefix = ctx.get_arg_string_optional("prefix")?;
-        let reply = clone_emojis(&ctx.client(), guild.id, prefix, emojis).await;
+    // defer, we might be a while
+    ctx.defer().await?;
 
-        if let Err(err) = ctx.update(&reply).await {
-            tracing::warn!(?err, "failed to respond to command");
-        }
+    // add multiple emotes
+    let prefix = ctx.get_arg_string_optional("prefix")?;
+    let reply = clone_emojis(&ctx.client(), guild.id, prefix, emojis).await;
+
+    if let Err(err) = ctx.update(&reply).await {
+        tracing::warn!(?err, "failed to respond to command");
     }
 
     Ok(())

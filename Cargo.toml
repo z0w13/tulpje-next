@@ -27,6 +27,7 @@ integer_division = "warn"
 cast_lossless = "warn"
 cast_precision_loss = "warn"
 
+redundant_else = "warn"
 unwrap_in_result = "warn"
 unneeded_field_pattern = "warn"
 ignored_unit_patterns = "warn"
