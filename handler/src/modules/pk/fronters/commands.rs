@@ -122,7 +122,7 @@ pub(crate) async fn update_fronter_channels(
     let create_fronters = desired_fronters.difference(&current_fronters);
 
     for fronter in delete_fronters {
-        let channel = fronter_channel_map.get(fronter).unwrap();
+        let channel = &fronter_channel_map[fronter];
         if let Err(e) = client.delete_channel(channel.id).await {
             error!("error deleting channel '{}': {}", fronter, e);
             continue;
