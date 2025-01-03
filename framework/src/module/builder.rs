@@ -12,7 +12,7 @@ use crate::handler::{
     task_handler::{TaskFunc, TaskHandler},
 };
 
-pub struct ModuleBuilder<T: Clone> {
+pub struct ModuleBuilder<T: Clone + Send + Sync> {
     name: String,
     guild_scoped: bool,
 
@@ -22,7 +22,7 @@ pub struct ModuleBuilder<T: Clone> {
     tasks: HashMap<String, TaskHandler<T>>,
 }
 
-impl<T: Clone> ModuleBuilder<T> {
+impl<T: Clone + Send + Sync> ModuleBuilder<T> {
     pub fn new(name: &str) -> Self {
         Self {
             name: name.into(),

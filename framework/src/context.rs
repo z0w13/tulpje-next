@@ -17,19 +17,19 @@ pub use modal_context::ModalContext;
 pub use task_context::TaskContext;
 
 #[derive(Debug)]
-pub struct Context<T: Clone> {
+pub struct Context<T: Clone + Send + Sync> {
     pub application_id: Id<ApplicationMarker>,
     pub services: T,
     pub client: Arc<Client>,
 }
 
-impl<T: Clone> Context<T> {
+impl<T: Clone + Send + Sync> Context<T> {
     pub fn interaction(&self) -> InteractionClient<'_> {
         self.client.interaction(self.application_id)
     }
 }
 
-impl<T: Clone> Clone for Context<T> {
+impl<T: Clone + Send + Sync> Clone for Context<T> {
     fn clone(&self) -> Self {
         Self {
             application_id: self.application_id,
@@ -39,7 +39,7 @@ impl<T: Clone> Clone for Context<T> {
     }
 }
 
-pub enum InteractionContext<T: Clone> {
+pub enum InteractionContext<T: Clone + Send + Sync> {
     Command(CommandContext<T>),
     ComponentInteraction(ComponentInteractionContext<T>),
     Modal(ModalContext<T>),

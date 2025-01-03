@@ -11,7 +11,7 @@ pub mod builder;
 pub mod registry;
 
 #[derive(Clone)]
-pub struct Module<T: Clone> {
+pub struct Module<T: Clone + Send + Sync> {
     pub(crate) name: String,
     pub(crate) guild_scoped: bool,
 

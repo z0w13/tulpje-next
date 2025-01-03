@@ -7,7 +7,7 @@ use super::context;
 use crate::context::Context;
 use crate::Error;
 
-pub fn parse<T: Clone>(
+pub fn parse<T: Clone + Send + Sync>(
     event: &InteractionCreate,
     meta: DiscordEventMeta,
     ctx: Context<T>,

@@ -16,7 +16,7 @@ use super::Context;
 use crate::Error;
 
 #[derive(Clone, Debug)]
-pub struct CommandContext<T: Clone> {
+pub struct CommandContext<T: Clone + Send + Sync> {
     pub meta: DiscordEventMeta,
     pub application_id: Id<ApplicationMarker>,
     pub services: T,
@@ -26,7 +26,7 @@ pub struct CommandContext<T: Clone> {
     pub command: CommandData,
 }
 
-impl<T: Clone> CommandContext<T> {
+impl<T: Clone + Send + Sync> CommandContext<T> {
     pub fn from_context(
         meta: DiscordEventMeta,
         ctx: Context<T>,

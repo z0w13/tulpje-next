@@ -11,19 +11,19 @@ pub(crate) type CommandFunc<T> =
     fn(CommandContext<T>) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
 
 #[derive(Clone)]
-pub struct CommandHandler<T: Clone> {
+pub struct CommandHandler<T: Clone + Send + Sync> {
     pub module: String,
     pub definition: Command,
     pub func: CommandFunc<T>,
 }
 
-impl<T: Clone> InteractionHandler<String> for CommandHandler<T> {
+impl<T: Clone + Send + Sync> InteractionHandler<String> for CommandHandler<T> {
     fn key(&self) -> String {
         self.definition.name.clone()
     }
 }
 
-impl<T: Clone> CommandHandler<T> {
+impl<T: Clone + Send + Sync> CommandHandler<T> {
     pub async fn run(&self, ctx: CommandContext<T>) -> Result<(), Error> {
         // can add more handling/parsing/etc here in the future
         (self.func)(ctx).await

@@ -29,7 +29,11 @@ impl Scheduler {
         }
     }
 
-    pub async fn enable_task<T: Clone + Send + Sync + 'static>(&mut self, ctx: Context<T>, task: TaskHandler<T>) {
+    pub async fn enable_task<T: Clone + Send + Sync + 'static>(
+        &mut self,
+        ctx: Context<T>,
+        task: TaskHandler<T>,
+    ) {
         let job = Job::<Utc>::cron_schedule(task.cron.clone());
         let job_name = task.name.clone();
         let job_id = self

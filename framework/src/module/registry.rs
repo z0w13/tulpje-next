@@ -14,7 +14,7 @@ use crate::handler::{
     clippy::partial_pub_fields,
     reason = "we need 'tasks' to be public for now to start the task scheduler"
 )]
-pub struct Registry<T: Clone> {
+pub struct Registry<T: Clone + Send + Sync> {
     modules: HashMap<String, Module<T>>,
 
     pub(crate) commands: HashMap<String, CommandHandler<T>>,
@@ -23,7 +23,7 @@ pub struct Registry<T: Clone> {
     pub tasks: HashMap<String, TaskHandler<T>>,
 }
 
-impl<T: Clone> Registry<T> {
+impl<T: Clone + Send + Sync> Registry<T> {
     pub fn new() -> Self {
         Self {
             modules: HashMap::new(),
@@ -75,7 +75,7 @@ impl<T: Clone> Registry<T> {
     }
 }
 
-impl<T: Clone> Default for Registry<T> {
+impl<T: Clone + Send + Sync> Default for Registry<T> {
     fn default() -> Self {
         Self::new()
     }

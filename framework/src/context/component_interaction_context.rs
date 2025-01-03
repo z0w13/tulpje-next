@@ -13,7 +13,7 @@ use twilight_model::{
 use crate::Error;
 
 #[derive(Clone, Debug)]
-pub struct ComponentInteractionContext<T: Clone> {
+pub struct ComponentInteractionContext<T: Clone + Send + Sync> {
     pub meta: DiscordEventMeta,
     pub application_id: Id<ApplicationMarker>,
     pub services: T,
@@ -23,7 +23,7 @@ pub struct ComponentInteractionContext<T: Clone> {
     pub interaction: MessageComponentInteractionData,
 }
 
-impl<T: Clone> ComponentInteractionContext<T> {
+impl<T: Clone + Send + Sync> ComponentInteractionContext<T> {
     pub fn interaction(&self) -> InteractionClient<'_> {
         self.client.interaction(self.application_id)
     }

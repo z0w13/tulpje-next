@@ -10,7 +10,7 @@ use twilight_model::{
 use tulpje_shared::DiscordEventMeta;
 
 #[derive(Clone, Debug)]
-pub struct ModalContext<T: Clone> {
+pub struct ModalContext<T: Clone + Send + Sync> {
     pub meta: DiscordEventMeta,
     pub application_id: Id<ApplicationMarker>,
     pub services: T,
