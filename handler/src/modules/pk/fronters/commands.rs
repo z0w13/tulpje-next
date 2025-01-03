@@ -122,6 +122,10 @@ pub(crate) async fn update_fronter_channels(
     let create_fronters = desired_fronters.difference(&current_fronters);
 
     for fronter in delete_fronters {
+        #[expect(
+            clippy::indexing_slicing,
+            reason = "`delete_fronters` should only contain keys from `fronter_channel_map`"
+        )]
         let channel = &fronter_channel_map[fronter];
         if let Err(e) = client.delete_channel(channel.id).await {
             error!("error deleting channel '{}': {}", fronter, e);
