@@ -43,8 +43,7 @@ impl Scheduler {
                 let job_handler = task.clone();
 
                 tokio::spawn(async move {
-                    if let Err(err) = job_handler.run(TaskContext::from_context(job_ctx)).await
-                    {
+                    if let Err(err) = job_handler.run(TaskContext::from_context(job_ctx)).await {
                         tracing::error!("error running task {}: {}", job_handler.name, err);
                     };
                 });
