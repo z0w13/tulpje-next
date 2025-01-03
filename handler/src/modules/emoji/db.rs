@@ -10,9 +10,8 @@ use super::shared::StatsSort;
 use crate::db::DbId;
 
 #[derive(Debug)]
-// allowed because this is the actual database structure
 // TODO: tests to confirm this still matches the database structure
-#[allow(dead_code)]
+#[expect(dead_code, reason = "reflects database structure")]
 pub(crate) struct EmojiUse {
     pub(crate) id: i64,
     pub(crate) guild_id: DbId<GuildMarker>,
@@ -34,7 +33,6 @@ pub(crate) struct EmojiStats {
 pub(crate) struct Emoji {
     #[sqlx(rename = "emoji_id")]
     pub(crate) id: DbId<EmojiMarker>,
-    #[allow(dead_code)]
     pub(crate) guild_id: DbId<GuildMarker>,
     pub(crate) name: String,
     pub(crate) animated: bool,
