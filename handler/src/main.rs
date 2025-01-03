@@ -15,7 +15,7 @@ use sqlx::{
 };
 use tracing::log::LevelFilter;
 
-use tulpje_framework::{registry::Registry, Error};
+use tulpje_framework::{Error, Registry, Scheduler};
 use tulpje_shared::{DiscordEvent, DiscordEventMeta};
 
 use config::Config;
@@ -75,33 +75,39 @@ async fn main() -> Result<(), Error> {
         .await
         .expect("error running migrations");
 
+    // Client interaction client
+    let app = client.current_user_application().await?.model().await?;
+
     // register interaction handlers
     tracing::info!("registering handlers");
     let mut registry = Registry::<Services>::new();
-    modules::core::setup(&mut registry).await;
-    modules::emoji::setup(&mut registry).await;
-    modules::pk::setup(&mut registry).await;
-    modules::stats::setup(&mut registry).await;
 
-    // Client interaction client
-    let app = client.current_user_application().await?.model().await?;
+    registry.register(modules::core::build());
+    registry.register(modules::emoji::build());
+    registry.register(modules::pk::build());
+    registry.register(modules::stats::build());
+
+    // create context
     let context = context::Context {
         application_id: app.id,
         services: context::Services {
             redis,
             db,
-            guild_commands: registry.guild_command.get_definitions(),
+            registry: registry.clone(),
         },
         client: Arc::new(client),
     };
 
     // start the task scheduler
-    let sched_handle = registry.task.run(context.clone()).await;
+    let mut scheduler = Scheduler::new();
+    let sched_handle = scheduler
+        .run(context.clone(), registry.tasks.values().collect())
+        .await;
 
     tracing::info!("registering global commands");
     context
         .interaction()
-        .set_global_commands(&registry.get_global_commands())
+        .set_global_commands(&registry.global_commands())
         .await?;
 
     // register guild commands
@@ -113,7 +119,7 @@ async fn main() -> Result<(), Error> {
             modules,
             guild_id,
             context.interaction(),
-            &context.services.guild_commands,
+            &context.services.registry,
         )
         .await?;
     }
@@ -139,7 +145,7 @@ async fn main() -> Result<(), Error> {
                 "event received",
             );
 
-            tulpje_framework::handle(meta, context.clone(), &mut registry, event.clone()).await;
+            tulpje_framework::handle(meta, context.clone(), &registry, event.clone()).await;
         }
     });
 

@@ -1,14 +1,17 @@
-use context::{Context, EventContext, InteractionContext};
-use registry::Registry;
 use tulpje_shared::DiscordEventMeta;
 use twilight_gateway::Event;
 use twilight_model::gateway::payload::incoming::InteractionCreate;
+
+pub use context::{Context, EventContext, InteractionContext};
+pub use module::{builder::ModuleBuilder, registry::Registry, Module};
+pub use scheduler::Scheduler;
 
 pub mod context;
 pub mod handler;
 pub mod interaction;
 pub mod macros;
-pub mod registry;
+pub mod module;
+pub mod scheduler;
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
@@ -16,7 +19,7 @@ pub async fn handle_interaction<T: Clone + Send + Sync + 'static>(
     event: InteractionCreate,
     context: Context<T>,
     meta: &DiscordEventMeta,
-    registry: &mut Registry<T>,
+    registry: &Registry<T>,
 ) -> Result<(), Error> {
     tracing::info!("interaction");
 
@@ -31,9 +34,7 @@ pub async fn handle_interaction<T: Clone + Send + Sync + 'static>(
             }
         }
         Ok(InteractionContext::ComponentInteraction(ctx)) => {
-            let Some(component_interaction) = registry
-                .component_interaction
-                .get(&ctx.interaction.custom_id)
+            let Some(component_interaction) = registry.components.get(&ctx.interaction.custom_id)
             else {
                 return Err(format!(
                     "no handler for component interaction {}",
@@ -62,7 +63,7 @@ pub async fn handle_interaction<T: Clone + Send + Sync + 'static>(
 pub async fn handle<T: Clone + Send + Sync + 'static>(
     meta: DiscordEventMeta,
     ctx: Context<T>,
-    registry: &mut Registry<T>,
+    registry: &Registry<T>,
     event: Event,
 ) {
     match event.clone() {
@@ -75,7 +76,7 @@ pub async fn handle<T: Clone + Send + Sync + 'static>(
         e => tracing::warn!(event = ?e.kind(), "unhandled event"),
     }
 
-    if let Some(handlers) = registry.event.get_all(event.kind()) {
+    if let Some(handlers) = registry.events.get(&event.kind()) {
         tracing::info!("running event handlers for {:?}", event.kind());
 
         for handler in handlers {

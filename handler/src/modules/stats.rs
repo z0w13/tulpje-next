@@ -14,25 +14,26 @@ use twilight_util::builder::{
     InteractionResponseDataBuilder,
 };
 
-use tulpje_framework::{handler::command_handler::CommandHandler, registry::Registry, Error};
+use tulpje_framework::{handler_func, Error, Module, ModuleBuilder};
 use tulpje_shared::shard_state::ShardState;
 
 use crate::context::{CommandContext, Services};
 
-pub async fn setup(registry: &mut Registry<Services>) {
-    registry.command.insert(CommandHandler {
-        definition: CommandBuilder::new("stats", "Bot stats", CommandType::ChatInput)
-            .dm_permission(false)
-            .build(),
-        func: |ctx| Box::pin(cmd_stats(ctx)),
-    });
-
-    registry.command.insert(CommandHandler {
-        definition: CommandBuilder::new("shards", "Stats for bot shards", CommandType::ChatInput)
-            .dm_permission(false)
-            .build(),
-        func: |ctx| Box::pin(cmd_shards(ctx)),
-    });
+pub(crate) fn build() -> Module<Services> {
+    ModuleBuilder::<Services>::new("stats")
+        .command(
+            CommandBuilder::new("stats", "Bot stats", CommandType::ChatInput)
+                .dm_permission(false)
+                .build(),
+            handler_func!(cmd_stats),
+        )
+        .command(
+            CommandBuilder::new("shards", "Stats for bot shards", CommandType::ChatInput)
+                .dm_permission(false)
+                .build(),
+            handler_func!(cmd_shards),
+        )
+        .build()
 }
 
 pub async fn get_shard_stats(

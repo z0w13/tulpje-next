@@ -13,3 +13,4 @@ tracing = "0.1.41"
 async-cron-scheduler = { version = "2.0.1", features = ["logging"] }
 chrono = "0.4.39"
 tokio = "1.42.0"
+uuid = { version = "1.11.0", features = ["v7"] }

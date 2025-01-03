@@ -4,10 +4,12 @@ use super::super::context::ComponentInteractionContext;
 use super::InteractionHandler;
 use crate::Error;
 
-type ComponentInteractionFunc<T> =
+pub(crate) type ComponentInteractionFunc<T> =
     fn(ComponentInteractionContext<T>) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
 
+#[derive(Clone)]
 pub struct ComponentInteractionHandler<T: Clone> {
+    pub module: String,
     pub custom_id: String,
     pub func: ComponentInteractionFunc<T>,
 }

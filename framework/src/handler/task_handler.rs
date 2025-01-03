@@ -6,10 +6,12 @@ use chrono::{DateTime, Utc};
 use crate::context::TaskContext;
 use crate::Error;
 
-type TaskFunc<T> = fn(TaskContext<T>) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
+pub(crate) type TaskFunc<T> =
+    fn(TaskContext<T>) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
 
 #[derive(Clone)]
 pub struct TaskHandler<T: Clone> {
+    pub module: String,
     pub name: String,
     pub cron: Schedule,
     pub func: TaskFunc<T>,

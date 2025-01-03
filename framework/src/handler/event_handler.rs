@@ -6,9 +6,12 @@ use twilight_gateway::EventType;
 use super::super::context::EventContext;
 use crate::Error;
 
-type EventFunc<T> = fn(EventContext<T>) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
+pub(crate) type EventFunc<T> =
+    fn(EventContext<T>) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
 
+#[derive(Clone)]
 pub struct EventHandler<T: Clone> {
+    pub module: String,
     pub uuid: String,
     pub event: EventType,
     pub func: EventFunc<T>,

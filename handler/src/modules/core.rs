@@ -8,9 +8,7 @@ use twilight_model::{
 };
 use twilight_util::builder::command::{CommandBuilder, StringBuilder};
 
-use tulpje_framework::{
-    command, handler::command_handler::CommandHandler, registry::Registry, Error,
-};
+use tulpje_framework::{handler_func, Error, Module, ModuleBuilder, Registry};
 
 use crate::{
     context::{CommandContext, Services},
@@ -19,55 +17,54 @@ use crate::{
 
 pub(crate) const VALID_MODULES: &[&str] = &["pluralkit"];
 
-pub async fn setup(registry: &mut Registry<Services>) {
-    command!(
-        registry,
-        CommandBuilder::new(
-            "enable",
-            "enable a module for this server",
-            CommandType::ChatInput,
+pub(crate) fn build() -> Module<Services> {
+    ModuleBuilder::<Services>::new("core")
+        .command(
+            CommandBuilder::new(
+                "enable",
+                "enable a module for this server",
+                CommandType::ChatInput,
+            )
+            .default_member_permissions(Permissions::MANAGE_GUILD)
+            .dm_permission(false)
+            .option(
+                StringBuilder::new("module", "The module to enable")
+                    .choices(VALID_MODULES.iter().map(|m| (m.to_string(), m.to_string())))
+                    .required(true)
+                    .build(),
+            )
+            .build(),
+            handler_func!(enable),
         )
-        .default_member_permissions(Permissions::MANAGE_GUILD)
-        .dm_permission(false)
-        .option(
-            StringBuilder::new("module", "The module to enable")
-                .choices(VALID_MODULES.iter().map(|m| (m.to_string(), m.to_string())))
-                .required(true)
-                .build()
+        .command(
+            CommandBuilder::new(
+                "disable",
+                "disable a module for this server",
+                CommandType::ChatInput,
+            )
+            .default_member_permissions(Permissions::MANAGE_GUILD)
+            .dm_permission(false)
+            .option(
+                StringBuilder::new("module", "The module to disable")
+                    .choices(VALID_MODULES.iter().map(|m| (m.to_string(), m.to_string())))
+                    .required(true)
+                    .build(),
+            )
+            .build(),
+            handler_func!(disable),
         )
-        .build(),
-        enable,
-    );
-    command!(
-        registry,
-        CommandBuilder::new(
-            "disable",
-            "disable a module for this server",
-            CommandType::ChatInput,
+        .command(
+            CommandBuilder::new(
+                "modules",
+                "list enabled and available server modules",
+                CommandType::ChatInput,
+            )
+            .default_member_permissions(Permissions::MANAGE_GUILD)
+            .dm_permission(false)
+            .build(),
+            handler_func!(modules),
         )
-        .default_member_permissions(Permissions::MANAGE_GUILD)
-        .dm_permission(false)
-        .option(
-            StringBuilder::new("module", "The module to disable")
-                .choices(VALID_MODULES.iter().map(|m| (m.to_string(), m.to_string())))
-                .required(true)
-                .build()
-        )
-        .build(),
-        disable,
-    );
-    command!(
-        registry,
-        CommandBuilder::new(
-            "modules",
-            "list enabled and available server modules",
-            CommandType::ChatInput,
-        )
-        .default_member_permissions(Permissions::MANAGE_GUILD)
-        .dm_permission(false)
-        .build(),
-        modules,
-    );
+        .build()
 }
 
 pub(crate) async fn enable(ctx: CommandContext) -> Result<(), Error> {
@@ -86,7 +83,7 @@ pub(crate) async fn enable(ctx: CommandContext) -> Result<(), Error> {
         db_guild_modules(&ctx.services.db, guild.id).await?,
         guild.id,
         ctx.interaction(),
-        &ctx.services.guild_commands,
+        &ctx.services.registry,
     )
     .await?;
 
@@ -111,7 +108,7 @@ pub(crate) async fn disable(ctx: CommandContext) -> Result<(), Error> {
         db_guild_modules(&ctx.services.db, guild.id).await?,
         guild.id,
         ctx.interaction(),
-        &ctx.services.guild_commands,
+        &ctx.services.registry,
     )
     .await?;
 
@@ -146,12 +143,12 @@ pub(crate) async fn set_guild_commands_for_guild(
     modules: Vec<String>,
     guild_id: Id<GuildMarker>,
     interaction: InteractionClient<'_>,
-    guild_commands: &HashMap<String, Vec<Command>>,
+    registry: &Registry<Services>,
 ) -> Result<(), Error> {
     let commands: Vec<Command> = modules
         .iter()
-        .filter_map(|module| guild_commands.get(module))
-        .flat_map(Clone::clone)
+        .filter_map(|module| registry.module_commands(module))
+        .flatten()
         .collect();
 
     tracing::debug!(

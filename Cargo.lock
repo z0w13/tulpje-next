@@ -4116,6 +4116,7 @@ dependencies = [
  "twilight-http",
  "twilight-model 0.16.0-rc.1",
  "twilight-util",
+ "uuid",
 ]
 
 [[package]]
@@ -4187,7 +4188,6 @@ dependencies = [
  "twilight-http",
  "twilight-model 0.16.0-rc.1",
  "twilight-util",
- "uuid",
  "vergen-gitcl",
 ]
 

@@ -1,15 +1,12 @@
-use std::collections::HashMap;
-
 use bb8_redis::RedisConnectionManager;
 
-use tulpje_framework::context;
-use twilight_model::application::command::Command;
+use tulpje_framework::{context, Registry};
 
 #[derive(Clone)]
 pub struct Services {
     pub redis: bb8::Pool<RedisConnectionManager>,
     pub db: sqlx::PgPool,
-    pub guild_commands: HashMap<String, Vec<Command>>,
+    pub registry: Registry<Services>,
 }
 
 pub type Context = context::Context<Services>;
