@@ -154,7 +154,7 @@ pub(crate) async fn update_member_roles(ctx: CommandContext) -> Result<(), Error
                     guild_name = guild.name,
                     "updated role: {}",
                     name,
-                )
+                );
             }
             ChangeOperation::Create { name, color } => {
                 ctx.client
@@ -168,7 +168,7 @@ pub(crate) async fn update_member_roles(ctx: CommandContext) -> Result<(), Error
                     guild_name = guild.name,
                     "created role: {}",
                     name
-                )
+                );
             }
             ChangeOperation::Delete { id, name } => {
                 ctx.client.delete_role(guild.id, *id).await?;
@@ -178,7 +178,7 @@ pub(crate) async fn update_member_roles(ctx: CommandContext) -> Result<(), Error
                     guild_name = guild.name,
                     "deleted_role: {}",
                     name
-                )
+                );
             }
         };
     }

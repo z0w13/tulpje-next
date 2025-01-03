@@ -162,7 +162,7 @@ pub async fn cmd_stats(ctx: CommandContext) -> Result<(), Error> {
         .embeds(Some(&[embed]))
         .await
     {
-        tracing::warn!(?err, "failed to respond to command")
+        tracing::warn!(?err, "failed to respond to command");
     }
 
     Ok(())
@@ -199,7 +199,7 @@ pub async fn cmd_shards(ctx: CommandContext) -> Result<(), Error> {
                 },
             )
             .into(),
-        )
+        );
     }
 
     let response = InteractionResponseDataBuilder::new()
@@ -213,7 +213,7 @@ pub async fn cmd_shards(ctx: CommandContext) -> Result<(), Error> {
         })
         .await
     {
-        tracing::warn!(?err, "failed to respond to command")
+        tracing::warn!(?err, "failed to respond to command");
     }
 
     Ok(())

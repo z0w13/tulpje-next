@@ -108,7 +108,7 @@ pub async fn handle_emoji_stats_sort(ctx: ComponentInteractionContext) -> Result
         .into()]))
         .await
     {
-        tracing::warn!(?err, "failed to update message")
+        tracing::warn!(?err, "failed to update message");
     }
 
     Ok(())

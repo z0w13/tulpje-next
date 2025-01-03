@@ -51,7 +51,7 @@ impl Scheduler {
 
     pub async fn disable_task(&mut self, name: &str) {
         let Some(job_id) = self.job_map.get(name) else {
-            return
+            return;
         };
 
         self.scheduler.remove(*job_id).await;
@@ -67,7 +67,7 @@ impl Scheduler {
         }
 
         for task in tasks {
-            self.enable_task(ctx.clone(), task.clone()).await
+            self.enable_task(ctx.clone(), task.clone()).await;
         }
 
         tokio::spawn(self.runner.take().unwrap())

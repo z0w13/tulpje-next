@@ -58,7 +58,7 @@ pub(crate) async fn command(ctx: CommandContext) -> Result<(), Error> {
         let reply = clone_emojis(&ctx.client(), guild.id, prefix, emojis).await;
 
         if let Err(err) = ctx.update(&reply).await {
-            tracing::warn!(?err, "failed to respond to command")
+            tracing::warn!(?err, "failed to respond to command");
         }
     }
 
@@ -97,7 +97,7 @@ pub(crate) async fn context_command(ctx: CommandContext) -> Result<(), Error> {
     let reply = clone_emojis(&ctx.client(), guild.id, None, emojis).await;
 
     if let Err(err) = ctx.update(&reply).await {
-        tracing::warn!(?err, "failed to respond to command")
+        tracing::warn!(?err, "failed to respond to command");
     }
     Ok(())
 }
