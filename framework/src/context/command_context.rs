@@ -49,7 +49,7 @@ impl<T: Clone> CommandContext<T> {
     }
 
     pub fn client(&self) -> Arc<Client> {
-        self.client.clone()
+        Arc::clone(&self.client)
     }
 
     pub async fn guild(&self) -> Result<Option<Guild>, Error> {

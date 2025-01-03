@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use tulpje_shared::DiscordEventMeta;
 use twilight_gateway::Event;
 use twilight_model::gateway::payload::incoming::InteractionCreate;
@@ -83,7 +85,7 @@ pub async fn handle<T: Clone + Send + Sync + 'static>(
             let event_ctx = EventContext {
                 meta: meta.clone(),
                 application_id: ctx.application_id,
-                client: ctx.client.clone(),
+                client: Arc::clone(&ctx.client),
                 services: ctx.services.clone(),
 
                 event: event.clone(),

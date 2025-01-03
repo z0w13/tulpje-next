@@ -19,6 +19,8 @@ renamed_function_params = "warn"
 redundant_clone = "warn"
 # for loops are clearer if we can use them
 needless_for_each = "warn"
+# clearer we're doing a "cheap" clone this way
+clone_on_ref_ptr = "warn"
 semicolon_if_nothing_returned = "warn"
 unused_trait_names = "warn"
 implicit_clone = "warn"

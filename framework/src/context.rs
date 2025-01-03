@@ -34,7 +34,7 @@ impl<T: Clone> Clone for Context<T> {
         Self {
             application_id: self.application_id,
             services: self.services.clone(),
-            client: self.client.clone(),
+            client: Arc::clone(&self.client),
         }
     }
 }
