@@ -82,10 +82,13 @@ async fn main() -> Result<(), Error> {
     tracing::info!("registering handlers");
     let mut registry = Registry::<Services>::new();
 
-    registry.register(modules::core::build());
     registry.register(modules::emoji::build());
     registry.register(modules::pk::build());
     registry.register(modules::stats::build());
+
+    // core should always be registered last because it needs the data from
+    // previous modules to set up
+    registry.register(modules::core::build(&registry));
 
     // create context
     let context = context::Context {

@@ -61,6 +61,14 @@ impl<T: Clone> Registry<T> {
     pub fn find_command(&self, name: &str) -> Option<&CommandHandler<T>> {
         self.commands.get(name)
     }
+
+    pub fn guild_module_names(&self) -> Vec<String> {
+        self.modules
+            .values()
+            .filter(|m| m.guild_scoped)
+            .map(|m| m.name.clone())
+            .collect()
+    }
 }
 
 impl<T: Clone> Default for Registry<T> {

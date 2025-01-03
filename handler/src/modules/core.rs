@@ -15,9 +15,13 @@ use crate::{
     db::DbId,
 };
 
-pub(crate) const VALID_MODULES: &[&str] = &["pluralkit"];
+pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
+    let guild_module_choices: Vec<(String, String)> = registry
+        .guild_module_names()
+        .into_iter()
+        .map(|m| (m.clone(), m.clone()))
+        .collect();
 
-pub(crate) fn build() -> Module<Services> {
     ModuleBuilder::<Services>::new("core")
         .command(
             CommandBuilder::new(
@@ -29,7 +33,7 @@ pub(crate) fn build() -> Module<Services> {
             .dm_permission(false)
             .option(
                 StringBuilder::new("module", "The module to enable")
-                    .choices(VALID_MODULES.iter().map(|m| (m.to_string(), m.to_string())))
+                    .choices(guild_module_choices.clone())
                     .required(true)
                     .build(),
             )
@@ -46,7 +50,7 @@ pub(crate) fn build() -> Module<Services> {
             .dm_permission(false)
             .option(
                 StringBuilder::new("module", "The module to disable")
-                    .choices(VALID_MODULES.iter().map(|m| (m.to_string(), m.to_string())))
+                    .choices(guild_module_choices.clone())
                     .required(true)
                     .build(),
             )
@@ -73,7 +77,7 @@ pub(crate) async fn enable(ctx: CommandContext) -> Result<(), Error> {
     };
 
     let module = ctx.get_arg_string("module")?;
-    if !VALID_MODULES.contains(&module.as_str()) {
+    if !ctx.services.registry.guild_module_names().contains(&module) {
         ctx.reply(format!("invalid module {}", module)).await?;
         return Ok(());
     }
@@ -98,7 +102,7 @@ pub(crate) async fn disable(ctx: CommandContext) -> Result<(), Error> {
     };
 
     let module = ctx.get_arg_string("module")?;
-    if !VALID_MODULES.contains(&module.as_str()) {
+    if !ctx.services.registry.guild_module_names().contains(&module) {
         ctx.reply(format!("invalid module {}", module)).await?;
         return Ok(());
     }
@@ -123,9 +127,11 @@ pub(crate) async fn modules(ctx: CommandContext) -> Result<(), Error> {
     };
 
     let modules = db_guild_modules(&ctx.services.db, guild.id).await?;
-    let available: Vec<String> = VALID_MODULES
-        .iter()
-        .map(|m| String::from(*m))
+    let available: Vec<String> = ctx
+        .services
+        .registry
+        .guild_module_names()
+        .into_iter()
         .filter(|m| !modules.contains(m))
         .collect();
 
