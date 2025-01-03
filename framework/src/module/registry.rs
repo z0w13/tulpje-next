@@ -10,6 +10,10 @@ use crate::handler::{
 };
 
 #[derive(Clone)]
+#[expect(
+    clippy::partial_pub_fields,
+    reason = "we need 'tasks' to be public for now to start the task scheduler"
+)]
 pub struct Registry<T: Clone> {
     modules: HashMap<String, Module<T>>,
 
