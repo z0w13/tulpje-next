@@ -26,6 +26,8 @@ integer_division = "warn"
 # we should explicitly ok data loss when converting types
 cast_lossless = "warn"
 cast_precision_loss = "warn"
+# I do like this syntax, but it might be less clear
+if_then_some_else_none = "warn"
 
 indexing_slicing = "warn"
 manual_assert = "warn"

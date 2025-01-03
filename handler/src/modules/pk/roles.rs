@@ -91,15 +91,11 @@ fn get_ops(
             match (current.get(role), desired.get(role)) {
                 // Update, only if color changed
                 (Some(current), Some(desired)) => {
-                    if current.color != desired.color {
-                        Some(ChangeOperation::Update {
-                            id: current.id.unwrap(),
-                            name: current.name.clone(),
-                            color: desired.color,
-                        })
-                    } else {
-                        None
-                    }
+                    (current.color != desired.color).then(|| ChangeOperation::Update {
+                        id: current.id.unwrap(),
+                        name: current.name.clone(),
+                        color: desired.color,
+                    })
                 }
                 // Create
                 (None, Some(desired)) => Some(ChangeOperation::Create {
