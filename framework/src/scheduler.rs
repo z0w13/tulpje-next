@@ -62,9 +62,10 @@ impl Scheduler {
         ctx: Context<T>,
         tasks: Vec<&TaskHandler<T>>,
     ) -> tokio::task::JoinHandle<()> {
-        if self.runner.is_none() {
-            panic!("Scheduler::run called twice, scheduler is already running");
-        }
+        assert!(
+            self.runner.is_some(),
+            "Scheduler::run called twice, scheduler is already running"
+        );
 
         for task in tasks {
             self.enable_task(ctx.clone(), task.clone()).await;
