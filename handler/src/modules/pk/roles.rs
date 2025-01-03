@@ -83,7 +83,7 @@ fn get_ops(
     current: HashMap<String, MemberRole>,
     desired: HashMap<String, MemberRole>,
 ) -> Vec<ChangeOperation> {
-    let all_roles: HashSet<&String> = HashSet::from_iter(current.keys().chain(desired.keys()));
+    let all_roles: HashSet<&String> = current.keys().chain(desired.keys()).collect();
 
     all_roles
         .into_iter()
