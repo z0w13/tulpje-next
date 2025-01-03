@@ -1,5 +1,5 @@
 use base64::{prelude::BASE64_STANDARD, Engine as _};
-use futures_util::StreamExt;
+use futures_util::StreamExt as _;
 use twilight_http::Client;
 
 use tulpje_framework::Error;

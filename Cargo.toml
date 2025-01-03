@@ -10,3 +10,4 @@ version = "0.6.0"
 
 [workspace.lints.clippy]
 semicolon_if_nothing_returned = "warn"
+unused_trait_names = "warn"

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use bb8_redis::{redis::AsyncCommands, RedisConnectionManager};
+use bb8_redis::{redis::AsyncCommands as _, RedisConnectionManager};
 use chrono::Utc;
-use num_format::{Locale, ToFormattedString};
+use num_format::{Locale, ToFormattedString as _};
 use twilight_model::{
     application::command::CommandType,
     http::interaction::{InteractionResponse, InteractionResponseType},

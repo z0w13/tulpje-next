@@ -11,7 +11,7 @@ use bb8_redis::RedisConnectionManager;
 use context::Services;
 use sqlx::{
     postgres::{PgConnectOptions, PgPoolOptions},
-    ConnectOptions,
+    ConnectOptions as _,
 };
 use tracing::log::LevelFilter;
 
