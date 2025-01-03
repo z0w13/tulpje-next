@@ -93,7 +93,7 @@ pub(crate) async fn update_fronter_channels(
     let fronter_channels = get_fronter_channels(client, guild.id, cat.id).await?;
     let desired_fronters = get_desired_fronters(
         &PkId(gs.system_id.clone()),
-        gs.token.clone().unwrap_or("".to_owned()),
+        gs.token.clone().unwrap_or_default(),
     )
     .await?;
     let current_fronters: HashSet<String> = fronter_channels

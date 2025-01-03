@@ -134,7 +134,7 @@ async fn clone_emojis(
     prefix: Option<String>,
     emojis: Vec<Emoji>,
 ) -> String {
-    let prefix = prefix.unwrap_or("".into());
+    let prefix = prefix.unwrap_or_default();
 
     // what a fucken mess to have async map, but it works :)
     let emoji_results: Vec<Result<Emoji, EmojiError>> =
@@ -170,11 +170,11 @@ async fn clone_emojis(
     format!(
         "{}\n{}",
         match emojis_added.is_empty() {
-            true => "".into(),
+            true => String::new(),
             false => format!("**Added:** {}", emojis_added.join("")),
         },
         match emoji_errors.is_empty() {
-            true => "".into(),
+            true => String::new(),
             false => format!("**Errors:**\n{}", emoji_errors.join("\n")),
         },
     )

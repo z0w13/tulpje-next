@@ -44,7 +44,7 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
     .await?;
 
     let pk = pkrs::client::PkClient {
-        token: token.unwrap_or("".to_owned()),
+        token: token.unwrap_or_default(),
         ..Default::default()
     };
 

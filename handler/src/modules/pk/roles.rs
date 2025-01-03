@@ -132,11 +132,8 @@ pub(crate) async fn update_member_roles(ctx: CommandContext) -> Result<(), Error
     };
 
     let current_role_map = get_current_roles(guild.clone());
-    let desired_role_map = get_desired_roles(
-        &PkId(gs.system_id),
-        gs.token.clone().unwrap_or("".to_owned()),
-    )
-    .await?;
+    let desired_role_map =
+        get_desired_roles(&PkId(gs.system_id), gs.token.clone().unwrap_or_default()).await?;
     let ops = get_ops(current_role_map, desired_role_map);
 
     // TODO: actually handle errors
