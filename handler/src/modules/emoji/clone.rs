@@ -106,10 +106,7 @@ async fn download_emoji(id: Id<EmojiMarker>, animated: bool) -> Result<String, r
     reqwest::get(format!(
         "https://cdn.discordapp.com/emojis/{}.{}",
         id,
-        match animated {
-            true => "gif",
-            false => "webp",
-        },
+        if animated { "gif" } else { "webp" },
     ))
     .await?
     .error_for_status()? // error if we don't get a 200 status
@@ -119,10 +116,7 @@ async fn download_emoji(id: Id<EmojiMarker>, animated: bool) -> Result<String, r
         // convert to a data uri
         format!(
             "data:{};base64,{}",
-            match animated {
-                true => "image/gif",
-                false => "image/webp",
-            },
+            if animated { "image/gif" } else { "image/webp" },
             BASE64_STANDARD.encode(b),
         )
     })
@@ -169,13 +163,15 @@ async fn clone_emojis(
 
     format!(
         "{}\n{}",
-        match emojis_added.is_empty() {
-            true => String::new(),
-            false => format!("**Added:** {}", emojis_added.join("")),
+        if emojis_added.is_empty() {
+            String::new()
+        } else {
+            format!("**Added:** {}", emojis_added.join(""))
         },
-        match emoji_errors.is_empty() {
-            true => String::new(),
-            false => format!("**Errors:**\n{}", emoji_errors.join("\n")),
+        if emoji_errors.is_empty() {
+            String::new()
+        } else {
+            format!("**Errors:**\n{}", emoji_errors.join("\n"))
         },
     )
 }

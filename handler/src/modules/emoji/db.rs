@@ -66,10 +66,7 @@ impl std::fmt::Display for Emoji {
         write!(
             f,
             "<{}:{}:{}>",
-            match self.animated {
-                true => "a",
-                false => "",
-            },
+            if self.animated { "a" } else { "" },
             self.name,
             self.id
         )
