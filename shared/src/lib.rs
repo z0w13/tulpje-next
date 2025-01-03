@@ -29,6 +29,10 @@ impl DiscordEvent {
     }
 }
 
+#[expect(
+    clippy::integer_division,
+    reason = "we only care about the whole numbers, so truncating is fine"
+)]
 pub fn format_significant_duration(total_secs: u64) -> String {
     const SECS_IN_MIN: u64 = 60;
     const SECS_IN_HOUR: u64 = 60 * 60;

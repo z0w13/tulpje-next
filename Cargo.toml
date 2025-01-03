@@ -21,6 +21,8 @@ redundant_clone = "warn"
 needless_for_each = "warn"
 # clearer we're doing a "cheap" clone this way
 clone_on_ref_ptr = "warn"
+# it's probably mistake unless explicitly allowed
+integer_division = "warn"
 unneeded_field_pattern = "warn"
 ignored_unit_patterns = "warn"
 semicolon_if_nothing_returned = "warn"

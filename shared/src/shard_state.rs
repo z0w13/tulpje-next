@@ -40,8 +40,9 @@ impl ShardState {
             .as_secs();
 
         // a mess of converting but it'll do for now
-        self.up
-            && now - self.last_heartbeat < ((self.heartbeat_interval / 1000) as f64 * 1.2) as u64
+        let heartbeat_interval_with_wiggle_room =
+            ((self.heartbeat_interval as f64 / 1000.) * 1.2) as u64;
+        self.up && now - self.last_heartbeat < heartbeat_interval_with_wiggle_room
     }
 }
 
