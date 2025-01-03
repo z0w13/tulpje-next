@@ -35,6 +35,7 @@ impl<T: Clone> ModuleBuilder<T> {
         }
     }
 
+    #[must_use]
     pub fn build(self) -> Module<T> {
         Module {
             name: self.name,
@@ -47,11 +48,13 @@ impl<T: Clone> ModuleBuilder<T> {
         }
     }
 
+    #[must_use]
     pub fn guild(mut self) -> Self {
         self.guild_scoped = true;
         self
     }
 
+    #[must_use]
     pub fn command(mut self, definition: Command, func: CommandFunc<T>) -> Self {
         self.commands.insert(
             definition.name.clone(),
@@ -64,6 +67,7 @@ impl<T: Clone> ModuleBuilder<T> {
         self
     }
 
+    #[must_use]
     pub fn component(mut self, custom_id: &str, func: ComponentInteractionFunc<T>) -> Self {
         self.components.insert(
             custom_id.to_string(),
@@ -76,6 +80,7 @@ impl<T: Clone> ModuleBuilder<T> {
         self
     }
 
+    #[must_use]
     pub fn event(mut self, event: EventType, func: EventFunc<T>) -> Self {
         self.events.entry(event).or_default().insert(EventHandler {
             module: self.name.clone(),
@@ -86,6 +91,7 @@ impl<T: Clone> ModuleBuilder<T> {
         self
     }
 
+    #[must_use]
     pub fn task(mut self, name: &str, schedule: &str, func: TaskFunc<T>) -> Self {
         self.tasks.insert(
             name.to_string(),
