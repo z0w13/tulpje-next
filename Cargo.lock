@@ -4105,7 +4105,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tulpje-framework"
-version = "0.4.2"
+version = "0.5.0"
 dependencies = [
  "async-cron-scheduler",
  "chrono",
@@ -4120,7 +4120,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-gateway"
-version = "0.4.2"
+version = "0.5.0"
 dependencies = [
  "amqprs",
  "bb8 0.9.0",
@@ -4153,7 +4153,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-handler"
-version = "0.4.2"
+version = "0.5.0"
 dependencies = [
  "amqprs",
  "async-cron-scheduler",
@@ -4193,7 +4193,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-manager"
-version = "0.4.2"
+version = "0.5.0"
 dependencies = [
  "dotenvy",
  "tokio",
@@ -4202,7 +4202,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-shared"
-version = "0.4.2"
+version = "0.5.0"
 dependencies = [
  "metrics",
  "metrics-exporter-prometheus",
@@ -4215,7 +4215,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-utils"
-version = "0.4.2"
+version = "0.5.0"
 dependencies = [
  "reqwest",
 ]
