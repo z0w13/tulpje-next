@@ -37,7 +37,7 @@ impl<T: Clone> CommandContext<T> {
             meta,
             application_id: ctx.application_id,
             client: ctx.client,
-            services: ctx.services.clone(),
+            services: ctx.services,
 
             command,
             event,

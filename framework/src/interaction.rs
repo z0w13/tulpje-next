@@ -24,7 +24,7 @@ pub fn parse<T: Clone>(
                     meta,
                     application_id: ctx.application_id,
                     client: ctx.client,
-                    services: ctx.services.clone(),
+                    services: ctx.services,
 
                     interaction: *interaction.clone(),
                     event: event.clone(),
@@ -36,7 +36,7 @@ pub fn parse<T: Clone>(
                 meta,
                 application_id: ctx.application_id,
                 client: ctx.client,
-                services: ctx.services.clone(),
+                services: ctx.services,
 
                 data: data.clone(),
                 event: event.clone(),

@@ -15,6 +15,8 @@ allow_attributes = "deny"
 mod_module_files = "deny"
 # we like consistency :)
 renamed_function_params = "warn"
+# rust can't always optimise them out so remove them
+redundant_clone = "warn"
 semicolon_if_nothing_returned = "warn"
 unused_trait_names = "warn"
 implicit_clone = "warn"

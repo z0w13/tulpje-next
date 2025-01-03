@@ -19,7 +19,7 @@ pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
     let guild_module_choices: Vec<(String, String)> = registry
         .guild_module_names()
         .into_iter()
-        .map(|m| (m.clone(), m.clone()))
+        .map(|m| (m.clone(), m))
         .collect();
 
     ModuleBuilder::<Services>::new("core")
@@ -50,7 +50,7 @@ pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
             .dm_permission(false)
             .option(
                 StringBuilder::new("module", "The module to disable")
-                    .choices(guild_module_choices.clone())
+                    .choices(guild_module_choices)
                     .required(true)
                     .build(),
             )
