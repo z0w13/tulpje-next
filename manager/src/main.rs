@@ -4,7 +4,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match dotenvy::dotenv().map(|_| ()) {
         Err(err) if err.not_found() => eprintln!("warn: no .env file found"),
         Err(err) => eprintln!("warn: error loading env vars: {}", err),
-        Ok(_) => (),
+        Ok(()) => (),
     };
 
     let token = match std::env::var("DISCORD_TOKEN") {
