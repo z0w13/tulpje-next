@@ -22,7 +22,6 @@ pub(crate) enum StatsSort {
 }
 
 impl StatsSort {
-    // alias poise::ChoiceParameter::name to avoid extra imports
     pub(crate) fn name(&self) -> &'static str {
         match self {
             Self::CountDesc => "Most Used",
