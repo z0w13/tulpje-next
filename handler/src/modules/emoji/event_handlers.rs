@@ -161,7 +161,7 @@ pub async fn reaction_add(ctx: EventContext) -> Result<(), Error> {
                 error!(err, "db::save_emoji_use");
             };
         }
-        ReactionType::Unicode { name: _ } => {
+        ReactionType::Unicode { .. } => {
             // NOTE: We ignore unicode emojis, we're tracking emoji use to see which
             //       are underused, unicode emojis are global anyway
         }
