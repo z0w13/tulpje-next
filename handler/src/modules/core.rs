@@ -210,6 +210,21 @@ async fn db_guild_modules(
     .await?)
 }
 
+pub(crate) async fn db_guilds_with_module(
+    db: &sqlx::PgPool,
+    module: &str,
+) -> Result<Vec<Id<GuildMarker>>, Error> {
+    Ok(sqlx::query_scalar!(
+        "SELECT guild_id FROM guild_modules WHERE module = $1",
+        module
+    )
+    .fetch_all(db)
+    .await?
+    .into_iter()
+    .map(|id| *DbId::from(id))
+    .collect())
+}
+
 pub(crate) async fn db_all_guild_modules(
     db: &sqlx::PgPool,
 ) -> Result<HashMap<Id<GuildMarker>, Vec<String>>, Error> {
