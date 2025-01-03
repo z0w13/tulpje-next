@@ -11,6 +11,8 @@ version = "0.6.0"
 [workspace.lints.clippy]
 # give a reason why it's allowed, thanks
 allow_attributes = "deny"
+# it's recommended to no longer use mod.rs files
+mod_module_files = "deny"
 # we like consistency :)
 renamed_function_params = "warn"
 semicolon_if_nothing_returned = "warn"
