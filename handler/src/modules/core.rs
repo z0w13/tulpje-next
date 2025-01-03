@@ -239,12 +239,12 @@ pub(crate) async fn db_all_guild_modules(
         .await?;
 
     let mut result = HashMap::new();
-    rows.into_iter().for_each(|r| {
+    for row in rows {
         result
-            .entry(*DbId::from(r.guild_id))
+            .entry(*DbId::from(row.guild_id))
             .or_insert(Vec::new())
-            .push(r.module);
-    });
+            .push(row.module);
+    }
 
     Ok(result)
 }

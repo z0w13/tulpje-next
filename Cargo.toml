@@ -17,6 +17,8 @@ mod_module_files = "deny"
 renamed_function_params = "warn"
 # rust can't always optimise them out so remove them
 redundant_clone = "warn"
+# for loops are clearer if we can use them
+needless_for_each = "warn"
 semicolon_if_nothing_returned = "warn"
 unused_trait_names = "warn"
 implicit_clone = "warn"
