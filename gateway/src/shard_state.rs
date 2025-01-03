@@ -57,7 +57,9 @@ impl ShardManager {
     }
 
     async fn helloed(&mut self, hello: Hello) -> Result<(), Box<dyn std::error::Error>> {
-        self.shard.heartbeat_interval = hello.heartbeat_interval;
+        // heartbeat_interval is a u64, but should be within bounds of u32,
+        // do error if it isn't for some reason
+        self.shard.heartbeat_interval = u32::try_from(hello.heartbeat_interval)?;
         self.shard.last_connection = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("time went backwards")

@@ -11,7 +11,7 @@ pub struct ShardState {
     pub disconnect_count: u64,
 
     pub latency: u64,
-    pub heartbeat_interval: u64,
+    pub heartbeat_interval: u32,
 
     pub last_started: u64,
     pub last_heartbeat: u64,
@@ -41,7 +41,7 @@ impl ShardState {
 
         // a mess of converting but it'll do for now
         let heartbeat_interval_with_wiggle_room =
-            ((self.heartbeat_interval as f64 / 1000.) * 1.2) as u64;
+            ((f64::from(self.heartbeat_interval) / 1000.) * 1.2) as u64;
         self.up && now - self.last_heartbeat < heartbeat_interval_with_wiggle_room
     }
 }
