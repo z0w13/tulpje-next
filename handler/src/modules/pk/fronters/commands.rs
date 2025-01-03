@@ -60,7 +60,7 @@ async fn get_fronter_category(
     opt_cat_name: Option<String>,
 ) -> Result<Option<Channel>, Error> {
     let cat_name = opt_cat_name
-        .unwrap_or("current fronters".into())
+        .unwrap_or_else(|| "current fronters".into())
         .to_lowercase();
 
     Ok(client
@@ -217,7 +217,7 @@ pub(crate) async fn update_fronters(ctx: CommandContext) -> Result<(), Error> {
         .await?;
 
     cat.guild_id
-        .ok_or(format!("channel {} isn't a guild channel", cat_id))?;
+        .ok_or_else(|| format!("channel {} isn't a guild channel", cat_id))?;
 
     update_fronter_channels(&ctx.client(), guild, &gs, cat).await?;
 

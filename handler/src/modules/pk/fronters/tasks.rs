@@ -64,10 +64,12 @@ async fn update_fronters_for_guild(
         .model()
         .await?;
 
-    cat.guild_id.ok_or(format!(
-        "channel {} for guild '{}' ({}) isn't a guild channel",
-        cat.id, guild.name, guild.id
-    ))?;
+    cat.guild_id.ok_or_else(|| {
+        format!(
+            "channel {} for guild '{}' ({}) isn't a guild channel",
+            cat.id, guild.name, guild.id
+        )
+    })?;
 
     super::commands::update_fronter_channels(client, guild.clone(), gs, cat)
         .await

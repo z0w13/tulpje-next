@@ -92,7 +92,7 @@ pub async fn message_update(ctx: EventContext) -> Result<(), Error> {
     let timestamp = evt
         .timestamp
         .and_then(|ts| DateTime::<Utc>::from_timestamp_micros(ts.as_micros()))
-        .unwrap_or(Utc::now());
+        .unwrap_or_else(|| Utc::now());
 
     // TODO: Once we implement cache compare the messages
     //       currently every edit considers every emoji a new one

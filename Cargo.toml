@@ -31,6 +31,8 @@ if_then_some_else_none = "warn"
 # the suggestions are usually not great, but this does usually indicate we can
 # refactor the code to
 option_if_let_else = "warn"
+# don't wanna evaluate things unnecessarily
+or_fun_call = "warn"
 
 indexing_slicing = "warn"
 manual_assert = "warn"
