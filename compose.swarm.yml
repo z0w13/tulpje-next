@@ -30,6 +30,17 @@ services:
     handler:
         image: "tulpje-handler${IMAGE_SUFFIX}"
         init: true
+        deploy:
+            mode: replicated
+            replicas: "${HANDLER_COUNT}"
+            update_config:
+                parallelism: 1
+                delay: 10s
+                monitor: 5s
+                order: start-first
+        environment:
+            TASK_SLOT: "{{ .Task.Slot }}"
+            HANDLER_COUNT: "${HANDLER_COUNT}"
         secrets:
             - "rust_log"
             - "rabbitmq_address"

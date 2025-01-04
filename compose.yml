@@ -31,6 +31,8 @@ services:
             dockerfile: "docker/Dockerfile.handler"
         init: true
         environment:
+            - HANDLER_ID
+            - HANDLER_COUNT
             - RUST_BACKTRACE=1
         secrets:
             - "rust_log"

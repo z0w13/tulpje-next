@@ -6,6 +6,8 @@ use tulpje_framework::{context, Registry};
 
 #[derive(Clone)]
 pub struct Services {
+    pub handler_id: u32,
+
     // NOTE: Internally uses an Arc, "cheap" to clone
     pub redis: bb8::Pool<RedisConnectionManager>,
     // NOTE: Internally uses an Arc, "cheap" to clone

@@ -7,6 +7,9 @@ pub struct Config {
     pub rabbitmq_address: String,
     pub redis_url: String,
     pub database_url: String,
+
+    pub handler_id: u32,
+    pub handler_count: u32,
 }
 
 impl Config {

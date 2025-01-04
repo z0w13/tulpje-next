@@ -5,7 +5,7 @@ mod db;
 mod metrics;
 mod modules;
 
-use std::{sync::Arc, time::Duration};
+use std::{env, sync::Arc, time::Duration};
 
 use bb8_redis::RedisConnectionManager;
 use context::Services;
@@ -29,6 +29,20 @@ async fn main() -> Result<(), Error> {
         }
         result => result?,
     };
+
+    // parse TASK_SLOT env var if it exists and use it for the handler id
+    if let Ok(task_slot) = env::var("TASK_SLOT") {
+        tracing::info!("TASK_SLOT env var found, using it for handler id");
+        tracing::debug!("TASK_SLOT = {}", task_slot);
+
+        env::set_var(
+            "HANDLER_ID",
+            format!(
+                "{}",
+                task_slot.parse::<u64>().expect("couldn't parse task_slot") - 1
+            ),
+        );
+    }
 
     // create config from environment vars
     let config = Config::from_env()?;
@@ -97,6 +111,8 @@ async fn main() -> Result<(), Error> {
     let context = context::Context {
         application_id: app.id,
         services: context::Services {
+            handler_id: config.handler_id,
+
             redis,
             db,
             registry: Arc::clone(&registry),
