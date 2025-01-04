@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tracing::debug!("TASK_SLOT = {}", task_slot);
 
         env::set_var(
-            "shard_id",
+            "SHARD_ID",
             format!(
                 "{}",
                 task_slot.parse::<u64>().expect("couldn't parse task_slot") - 1
