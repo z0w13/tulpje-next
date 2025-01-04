@@ -167,19 +167,19 @@ pub(crate) async fn update_fronter_channels(
 
         fronter_channel_map.insert(fronter.to_owned(), channel.clone());
     }
-    for (name, position) in fronter_pos_map.iter() {
+    for (name, position) in fronter_pos_map {
         let channel = fronter_channel_map
-            .get(name)
+            .get(&name)
             .expect("couldn't get channel from fronter_channel_map, this should never happen!")
             .to_owned();
 
-        if channel.position.is_some_and(|p| p == i32::from(*position)) {
+        if channel.position.is_some_and(|p| p == i32::from(position)) {
             continue;
         }
 
         if let Err(e) = client
             .update_channel(channel.id)
-            .position(u64::from(*position))
+            .position(u64::from(position))
             .await
         {
             error!("error moving channel '{}': {}", name, e);

@@ -122,7 +122,7 @@ async fn main() -> Result<(), Error> {
         .expect("error fetching guild modules");
     for (guild_id, modules) in guild_modules {
         modules::core::set_guild_commands_for_guild(
-            modules,
+            &modules,
             guild_id,
             context.interaction(),
             &context.services.registry,

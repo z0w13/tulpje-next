@@ -134,7 +134,7 @@ pub(crate) async fn update_member_roles(ctx: CommandContext) -> Result<(), Error
 
     // TODO: actually handle errors
     // TODO: set mention permissions?
-    for op in ops.iter() {
+    for op in &ops {
         match op {
             ChangeOperation::Update { id, name, color } => {
                 ctx.client
@@ -178,12 +178,13 @@ pub(crate) async fn update_member_roles(ctx: CommandContext) -> Result<(), Error
 
     // aggregate stats
     let (created, deleted, updated) =
-        ops.iter()
+        ops.into_iter()
             .fold((0, 0, 0), |(created, deleted, updated), op| match op {
                 ChangeOperation::Create { .. } => (created + 1, deleted, updated),
                 ChangeOperation::Delete { .. } => (created, deleted + 1, updated),
                 ChangeOperation::Update { .. } => (created, deleted, updated + 1),
             });
+
 
     ctx.update(format!(
         "roles updated, {} created, {} deleted, {} updated",

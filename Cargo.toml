@@ -33,6 +33,9 @@ if_then_some_else_none = "warn"
 option_if_let_else = "warn"
 # don't wanna evaluate things unnecessarily
 or_fun_call = "warn"
+# .iter() / .into_iter() are not needed when using for loops
+explicit_iter_loop = "warn"
+explicit_into_iter_loop = "warn"
 
 indexing_slicing = "warn"
 manual_assert = "warn"

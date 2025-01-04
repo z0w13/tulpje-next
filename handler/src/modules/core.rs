@@ -84,7 +84,7 @@ pub(crate) async fn enable(ctx: CommandContext) -> Result<(), Error> {
 
     db_enable_module(&ctx.services.db, guild.id, &module).await?;
     set_guild_commands_for_guild(
-        db_guild_modules(&ctx.services.db, guild.id).await?,
+        &db_guild_modules(&ctx.services.db, guild.id).await?,
         guild.id,
         ctx.interaction(),
         &ctx.services.registry,
@@ -109,7 +109,7 @@ pub(crate) async fn disable(ctx: CommandContext) -> Result<(), Error> {
 
     db_disable_module(&ctx.services.db, guild.id, &module).await?;
     set_guild_commands_for_guild(
-        db_guild_modules(&ctx.services.db, guild.id).await?,
+        &db_guild_modules(&ctx.services.db, guild.id).await?,
         guild.id,
         ctx.interaction(),
         &ctx.services.registry,
@@ -146,7 +146,7 @@ pub(crate) async fn modules(ctx: CommandContext) -> Result<(), Error> {
 }
 
 pub(crate) async fn set_guild_commands_for_guild(
-    modules: Vec<String>,
+    modules: &[String],
     guild_id: Id<GuildMarker>,
     interaction: InteractionClient<'_>,
     registry: &Registry<Services>,

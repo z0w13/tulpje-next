@@ -176,7 +176,7 @@ pub async fn cmd_shards(ctx: CommandContext) -> Result<(), Error> {
     shard_stats.sort_by_key(|s| s.shard_id);
 
     let mut embed = EmbedBuilder::new().title("Tulpje Discord Bot").build();
-    for shard in shard_stats.iter() {
+    for shard in shard_stats {
         embed.fields.push(
             EmbedFieldBuilder::new(
                 format!("Shard #{}", shard.shard_id),
