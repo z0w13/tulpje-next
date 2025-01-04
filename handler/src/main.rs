@@ -50,10 +50,6 @@ async fn main() -> Result<(), Error> {
     // set-up logging
     tracing_subscriber::fmt::init();
 
-    // set-up metrics
-    tracing::info!("installing metrics collector and exporter...");
-    metrics::install().expect("error setting up metrics");
-
     // needed for fetching recommended shard count
     let client = twilight_http::Client::builder()
         .proxy(config.discord_proxy, true)
@@ -66,6 +62,10 @@ async fn main() -> Result<(), Error> {
         .build(manager)
         .await
         .expect("error initialising redis pool");
+
+    // set-up metrics
+    tracing::info!("installing metrics collector and exporter...");
+    metrics::install(redis.clone(), config.handler_id).expect("error setting up metrics");
 
     // create postgres connection
     let connect_opts = config

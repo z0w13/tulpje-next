@@ -49,10 +49,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // set-up logging
     tracing_subscriber::fmt::init();
 
-    // set-up metrics
-    tracing::info!("installing metrics collector and exporter...");
-    metrics::install(config.shard_id).expect("error setting up metrics");
-
     let amqp = amqp::create(&config.rabbitmq_address).await;
 
     // create the redis connection
@@ -61,6 +57,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build(manager)
         .await
         .expect("error initialising redis pool");
+
+    // set-up metrics
+    tracing::info!("installing metrics collector and exporter...");
+    metrics::install(redis.clone(), config.shard_id).expect("error setting up metrics");
 
     // create the shard
     tracing::info!("shard: {}, total: {}", config.shard_id, config.shard_count);

@@ -2600,6 +2600,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cc5b72d8145275d844d4b5f6d4e1eef00c8cd889edb6035c21675d1bb1f45c9f"
 dependencies = [
  "bitflags 2.6.0",
+ "chrono",
+ "flate2",
  "hex",
  "procfs-core",
  "rustix 0.38.42",
@@ -2612,6 +2614,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "239df02d8349b06fc07398a3a1697b06418223b1c7725085e801e7c0fc6a12ec"
 dependencies = [
  "bitflags 2.6.0",
+ "chrono",
  "hex",
 ]
 
@@ -4204,11 +4207,16 @@ dependencies = [
 name = "tulpje-shared"
 version = "0.6.0"
 dependencies = [
+ "bb8 0.9.0",
+ "bb8-redis 0.18.0",
  "metrics",
  "metrics-exporter-prometheus",
  "metrics-process",
+ "procfs",
  "serde",
+ "serde_json",
  "tokio",
+ "tracing",
  "twilight-model 0.16.0-rc.1",
  "uuid",
 ]

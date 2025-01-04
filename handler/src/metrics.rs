@@ -1,11 +1,15 @@
-use std::error::Error;
-
+use bb8_redis::RedisConnectionManager;
 use metrics_exporter_prometheus::PrometheusBuilder;
 
-pub(crate) fn install() -> Result<(), Box<dyn Error>> {
+pub(crate) fn install(
+    redis: bb8::Pool<RedisConnectionManager>,
+    handler_id: u32,
+) -> Result<(), Box<dyn std::error::Error>> {
     // install metrics collector and exporter
     tulpje_shared::metrics::install(
-        PrometheusBuilder::new().add_global_label("process", "handler"),
+        PrometheusBuilder::new(),
+        redis,
+        format!("handler-{}", handler_id),
     )?;
 
     // define metrics

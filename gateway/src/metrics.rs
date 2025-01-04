@@ -1,13 +1,19 @@
 use std::error::Error;
 
+use bb8_redis::RedisConnectionManager;
 use metrics::{counter, describe_counter};
 use metrics_exporter_prometheus::PrometheusBuilder;
 use twilight_gateway::{Event, EventType};
 
-pub(crate) fn install(shard_id: u32) -> Result<(), Box<dyn Error>> {
+pub(crate) fn install(
+    redis: bb8::Pool<RedisConnectionManager>,
+    shard_id: u32,
+) -> Result<(), Box<dyn Error>> {
     // install metrics collector and exporter
     tulpje_shared::metrics::install(
-        PrometheusBuilder::new().add_global_label("process", format!("gateway-{}", shard_id)),
+        PrometheusBuilder::new(),
+        redis,
+        format!("gateway-{}", shard_id),
     )?;
 
     // define metrics
