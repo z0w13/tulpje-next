@@ -90,13 +90,16 @@ async fn main() -> Result<(), Error> {
     // previous modules to set up
     registry.register(modules::core::build(&registry));
 
+    // we don't need to mutate registry anymore after this
+    let registry = Arc::new(registry);
+
     // create context
     let context = context::Context {
         application_id: app.id,
         services: context::Services {
             redis,
             db,
-            registry: registry.clone(),
+            registry: Arc::clone(&registry),
         },
         client: Arc::new(client),
     };
