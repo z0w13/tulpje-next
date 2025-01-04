@@ -14,6 +14,17 @@ async-cron-scheduler = { version = "2.0.1", features = ["logging"] }
 chrono = "0.4.39"
 tokio = "1.42.0"
 uuid = { version = "1.11.0", features = ["v7"] }
+criterion = { version = "0.5.1", features = ["async_tokio"] }
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[lib]
+bench = false
+
+[[bench]]
+name = "framework"
+harness = false
 
 [lints]
 workspace = true

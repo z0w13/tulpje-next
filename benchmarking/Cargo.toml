@@ -1,0 +1,17 @@
+[package]
+name = "benchmarking"
+edition = "2021"
+version.workspace = true
+
+[dependencies]
+tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
+twilight-http = { version = "0.16.0-rc.1", features = ["rustls-webpki-roots"], default-features = false }
+twilight-model = "0.16.0-rc.1"
+twilight-gateway = "0.16.0-rc.1"
+twilight-util = { version = "0.16.0-rc.1", features = ["builder"] }
+
+tulpje-framework = { version = "0.6.0", path = "../framework" }
+tulpje-shared = { version = "0.6.0", path = "../shared" }
+
+[lints]
+workspace = true
