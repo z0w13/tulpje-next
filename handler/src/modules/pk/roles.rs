@@ -185,7 +185,6 @@ pub(crate) async fn update_member_roles(ctx: CommandContext) -> Result<(), Error
                 ChangeOperation::Update { .. } => (created, deleted, updated + 1),
             });
 
-
     ctx.update(format!(
         "roles updated, {} created, {} deleted, {} updated",
         created, deleted, updated
